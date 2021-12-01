@@ -2,11 +2,12 @@
 //
 
 #include "blockudoku-solver.h"
+#include "engine.h"
 
 using namespace std;
 
 int main()
 {
-	cout << "Hello CMake!!" << endl;
+	cout << "Hello CMake!!\n" << BitBoard::full().str() << endl;
 	return 0;
 }
