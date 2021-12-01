@@ -8,7 +8,9 @@ namespace {
 	const uint64_t RIGHT_MOST_COLUMN_B = (1ULL << 8) | (1ULL << 17) | (1ULL << 26);
 	const uint64_t RIGHT_MOST_COLUMN_A = RIGHT_MOST_COLUMN_B
 		 | (1ULL << 35) | (1ULL << 44) | (1ULL << 53);
-	const uint64_t ROW_5 = 0x1FFULL << (5 * 9);
+
+	const uint64_t ROW_0 = 0x1FFULL;
+	const uint64_t ROW_5 = ROW_0 << (5 * 9);
 }
 
 BitBoard::BitBoard(uint64_t a, uint64_t b) : a(a), b(b) {}
@@ -43,6 +45,22 @@ BitBoard BitBoard::empty() {
 
 BitBoard BitBoard::full() {
 	return BitBoard(ALL_ALLOWED_BITS_IN_A, ALL_ALLOWED_BITS_IN_B);
+}
+
+BitBoard BitBoard::row(unsigned r) {
+	assert(r < 9);
+	if (r <= 5) {
+		return BitBoard(ROW_0 << (r * 9), 0);
+	}
+	else {
+		return BitBoard(0, ROW_0 << ((r - 6)*9));
+	}
+}
+
+BitBoard BitBoard::column(unsigned c) {
+	assert(c < 9);
+	int to_shift = 8 - c;
+	return BitBoard(RIGHT_MOST_COLUMN_A >> to_shift, RIGHT_MOST_COLUMN_B >> to_shift);
 }
 
 BitBoard BitBoard::shiftRight() const {

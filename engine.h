@@ -11,6 +11,10 @@ public:
 	operator bool() const;
 	static BitBoard empty();
 	static BitBoard full();
+	static BitBoard row(unsigned r);
+	static BitBoard column(unsigned c);
+	//static BitBoard cube(unsigned r, unsigned c);
+
 	bool at(unsigned r, unsigned c) const;
 
 	BitBoard operator|(const BitBoard other) const;
