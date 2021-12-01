@@ -8,20 +8,26 @@ void testBitBoardBasics() {
 	BOOST_ASSERT(!BitBoard::empty());
 
 	// All locations are empty.
-	BitBoard accumulate_rows = BitBoard::empty();
-	BitBoard accumulate_cols = BitBoard::empty();
 	for (int r = 0; r < 9; r++) {
 		for (int c = 0; c < 9; c++) {
 			BOOST_ASSERT(!BitBoard::empty().at(r, c));
 			BOOST_ASSERT(BitBoard::full().at(r, c));
 		}
-		BOOST_ASSERT(BitBoard::row(r).count() == 9);
-		accumulate_rows = accumulate_rows | BitBoard::row(r);
-		accumulate_cols = accumulate_cols | BitBoard::column(r);
 	}
-	BOOST_ASSERT(accumulate_rows.count() == 81);
-	BOOST_ASSERT(accumulate_cols.count() == 81);
+	
 	BOOST_ASSERT((BitBoard::row(5) | BitBoard::column(4)).count() == 17);
+	BitBoard acc_cubes = BitBoard::empty();
+	
+	for (int r = 0; r < 3; r++) {
+		for (int c = 0; c < 3; c++) {
+			BitBoard cube = BitBoard::cube(r, c);
+			BOOST_ASSERT(cube.count() == 9);
+			acc_cubes = (acc_cubes | cube);
+		}
+	}
+	
+	BOOST_ASSERT(acc_cubes.count() == 81);
+	BOOST_ASSERT((BitBoard::cube(1, 1) - BitBoard::row(4) - BitBoard::column(4)).count() == 4);
 
 	// Basic counting
 	BOOST_ASSERT(BitBoard(1, 3).count() == 3);
