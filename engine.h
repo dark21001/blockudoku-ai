@@ -2,13 +2,13 @@
 #include <cstdint>
 #include <string>
 
+
 class BitBoard {
 private:
 	uint64_t a, b;
 	
 public:
-	constexpr explicit BitBoard(uint64_t a, uint64_t b): a(a), b(b){}
-
+	explicit BitBoard(uint64_t a, uint64_t b);
 	operator bool() const;
 	static BitBoard empty();
 	static BitBoard full();

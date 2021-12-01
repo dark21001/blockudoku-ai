@@ -15,6 +15,8 @@ namespace {
 
 // === BIT BOARD
 
+BitBoard::BitBoard(uint64_t a, uint64_t b) : a(a), b(b) {}
+
 bool BitBoard::at(unsigned r, unsigned c) const {
 	assert(r < 9);
 	assert(c < 9);
