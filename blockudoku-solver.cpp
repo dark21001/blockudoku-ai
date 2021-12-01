@@ -8,6 +8,6 @@ using namespace std;
 
 int main()
 {
-	cout << "Hello CMake!!\n" << BitBoard::full().str() << endl;
+	cout << "Hello CMake!!\n" << BitBoard::full().shiftDown().str() << endl;
 	return 0;
 }

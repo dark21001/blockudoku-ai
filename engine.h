@@ -6,7 +6,6 @@ class BitBoard {
 private:
 	uint64_t a, b;
 	
-
 public:
 	explicit BitBoard(uint64_t a, uint64_t b);
 	operator bool() const;
@@ -16,7 +15,10 @@ public:
 
 	BitBoard operator|(const BitBoard other) const;
 	BitBoard operator&(const BitBoard other) const;
-	//BitBoard operator~() const;
+	BitBoard operator-(const BitBoard other) const;
+
+	BitBoard shiftRight() const;
+	BitBoard shiftDown() const;
 
 	int count() const;
 
