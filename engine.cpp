@@ -1,6 +1,8 @@
 #include "engine.h"
 #include <cassert>
 #include <bitset>
+#include <algorithm>
+#include <iostream>
 
 namespace {
 	const uint64_t ROW_0 = 0x1FFULL;
@@ -19,6 +21,10 @@ BitBoard::BitBoard(uint64_t a, uint64_t b) : a(a), b(b) {}
 
 bool BitBoard::operator==(BitBoard other) const {
 	return a == other.a && b == other.b;
+}
+
+bool BitBoard::operator<(BitBoard other) const {
+	return a < other.a || (a == other.a && b < other.b);
 }
 
 bool BitBoard::at(unsigned r, unsigned c) const {
@@ -111,6 +117,7 @@ std::string BitBoard::str() const {
 
 // ====== Piece
 Piece::Piece(uint64_t a): bb(BitBoard(a, 0)) {}
+Piece::Piece() : bb(BitBoard::empty()){};
 BitBoard Piece::getBitBoard() const {
 	return bb;
 }
@@ -223,6 +230,10 @@ Piece Piece::getRandom() {
 	return Piece(PIECES[rand() % 47]);
 }
 
+bool Piece::operator<(Piece other) const {
+	return bb < other.bb;
+}
+
 PieceIterator PieceIteratorGenerator::end() const {
 	return PieceIterator(sizeof PIECES / sizeof *PIECES);
 }
@@ -253,8 +264,8 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 	return NextGameStateIteratorGenerator(*this, piece);
 }
 
-uint64_t GameState::simpleEval() const {
-	uint64_t result = bb.count();
+double GameState::simpleEval() const {
+	double result = bb.count();
 
 	for (int i = 0; i < 9; i++) {
 		if (bb & BitBoard::column(i)) {
@@ -351,4 +362,54 @@ NextGameStateIterator NextGameStateIteratorGenerator::begin() const {
 
 NextGameStateIterator NextGameStateIteratorGenerator::end() const {
 	return NextGameStateIterator(state, Piece(BitBoard::empty()));
+}
+
+// ====== AI
+GameState AI::makeMove(GameState game, Piece p1, Piece p2, Piece p3) {
+	Piece pieces[3] = { p1, p2, p3 };
+	std::sort(pieces, pieces+3);
+
+	double bestScore = 9999999999;
+	auto bestNext = GameState(BitBoard::full());
+
+	// If we can clear with 2 pieces or fewer, then we must try permutations.
+	bool canClearWith2Pieces = false;
+	for (const auto after_p1 : game.nextStates(pieces[0])) {
+		if (after_p1.getBitBoard().count() < game.getBitBoard().count()) {
+			canClearWith2Pieces = true;
+		}
+		for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
+			if (after_p2.getBitBoard().count() < after_p1.getBitBoard().count()) {
+				canClearWith2Pieces = true;
+			}
+		}
+	}
+
+	do {
+		for (const auto after_p1 : game.nextStates(pieces[0])) {
+			for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
+				for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
+					double total_after_p3 = 0;
+					for (const auto p4 : Piece::getAll()) {
+						double best_after_p4 = 99999999;
+						for (const auto after_p4 : after_p3.nextStates(p4)) {
+							best_after_p4 = std::min(best_after_p4,
+								(double)after_p4.simpleEval());
+						}
+						total_after_p3 += best_after_p4;
+						if (total_after_p3 > bestScore) {
+							// It already looks shitty.
+							break;
+						}
+					}
+					if (total_after_p3 < bestScore) {
+						bestScore = total_after_p3;
+						bestNext = after_p3;
+					}
+				}
+			}
+		}
+	} while (canClearWith2Pieces && std::next_permutation(pieces, pieces+3));
+
+	return bestNext;
 }

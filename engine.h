@@ -11,6 +11,7 @@ public:
 	explicit BitBoard(uint64_t a, uint64_t b);
 	operator bool() const;
 	bool operator==(BitBoard other) const;
+	bool operator<(BitBoard other) const;
 	static BitBoard empty();
 	static BitBoard full();
 
@@ -35,13 +36,15 @@ public:
 class PieceIteratorGenerator;
 class Piece {
 private:
-	const BitBoard bb;
+	BitBoard bb;
 
 public:
 	explicit Piece(uint64_t a);
+	Piece();
 	BitBoard getBitBoard() const;
 	static PieceIteratorGenerator getAll();
 	static Piece getRandom();
+	bool operator<(Piece other) const;
 
 };
 
@@ -76,7 +79,7 @@ public:
 	explicit GameState(BitBoard bb);
 	BitBoard getBitBoard() const;
 	NextGameStateIteratorGenerator nextStates(Piece piece) const;
-	uint64_t simpleEval() const;
+	double simpleEval() const;
 };
 
 class NextGameStateIteratorGenerator;
@@ -105,4 +108,9 @@ public:
 	NextGameStateIterator end() const;
 	
 
+};
+
+class AI {
+public:
+	static GameState makeMove(GameState state, Piece p1, Piece p2, Piece p3);
 };
