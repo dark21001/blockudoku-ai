@@ -4,6 +4,17 @@
 #include "boostassert.h"
 #include<iostream>
 
+void assertNumPlacements(
+	BitBoard board,
+	uint64_t piece,
+	int expected) {
+	int c = 0;
+	for (const GameState x : GameState(board).nextStates(Piece(piece))) {
+		c++;
+	}
+	BOOST_ASSERT(c == expected);
+}
+
 void testBitBoardBasics() {
 	BOOST_ASSERT(!BitBoard::empty());
 
@@ -42,6 +53,28 @@ void testBitBoardBasics() {
 	BOOST_ASSERT(BitBoard::full().shiftDown().count() == 81 - 9);
 	BOOST_ASSERT(BitBoard::full().shiftDown().shiftDown().count() == 81 - 18);
 	BOOST_ASSERT(BitBoard::full().shiftDown().shiftRight().count() == 81 - 9 - 8);
+
+	assertNumPlacements(BitBoard::empty(), 1, 81);
+	assertNumPlacements(BitBoard::full(), 1, 0);
+	assertNumPlacements(BitBoard::full() - BitBoard::column(4), 1, 9);
+	assertNumPlacements(BitBoard::empty(), 7, 9*7);
+	assertNumPlacements(BitBoard::empty(), 3 | (1<<9), 8*8);
+
+	const BitBoard borders = BitBoard::column(0) | BitBoard::column(8) |
+		BitBoard::row(0) | BitBoard::row(8);
+	assertNumPlacements(borders, 1, 7*7);
+	assertNumPlacements(borders, 3 | (1<<9) | (1<<10), 6 * 6);
+
+	int numPieces = 0;
+	for (auto p1 : Piece::getAll()) {
+		numPieces++;
+		int numSame = 0;
+		for (auto p2 : Piece::getAll()) {
+			numSame += p1.getBitBoard() == p2.getBitBoard();
+		}
+		BOOST_ASSERT(numSame == 1);
+	}
+	BOOST_ASSERT(numPieces == 47);
 }
 
 int main()
