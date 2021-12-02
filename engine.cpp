@@ -115,6 +115,7 @@ BitBoard Piece::getBitBoard() const {
 	return bb;
 }
 
+
 PieceIterator::PieceIterator(uint8_t i): i(i)  {}
 
 PieceIterator PieceIteratorGenerator::begin() const {
@@ -218,6 +219,10 @@ namespace {
 	};
 }
 
+Piece Piece::getRandom() {
+	return Piece(PIECES[rand() % 47]);
+}
+
 PieceIterator PieceIteratorGenerator::end() const {
 	return PieceIterator(sizeof PIECES / sizeof *PIECES);
 }
@@ -248,6 +253,29 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 	return NextGameStateIteratorGenerator(*this, piece);
 }
 
+uint64_t GameState::simpleEval() const {
+	uint64_t result = bb.count();
+
+	for (int i = 0; i < 9; i++) {
+		if (bb & BitBoard::column(i)) {
+			result += 1;
+		}
+		if (bb & BitBoard::row(i)) {
+			result += 1;
+		}
+	}
+
+	for (int r = 0; r < 3; ++r) {
+		for (int c = 0; c < 3; ++c) {
+			if (bb & BitBoard::cube(r, c)) {
+				result += 1;
+			}
+		}
+	}
+
+	return result;
+}
+
 
 NextGameStateIterator::NextGameStateIterator(GameState state, Piece piece):
 	original(state), left(piece.getBitBoard()), next(piece.getBitBoard()) {
@@ -257,7 +285,29 @@ NextGameStateIterator::NextGameStateIterator(GameState state, Piece piece):
 }
 
 GameState NextGameStateIterator::operator*() const {
-	return GameState(next);
+	const auto after_add = original.getBitBoard() | next;
+	auto result = after_add;
+	for (int i = 0; i < 9; i++) {
+		const auto col = BitBoard::column(i);
+		if ((after_add & col) == col) {
+			result = result - col;
+		}
+		const auto row = BitBoard::row(i);
+		if ((after_add & row) == row) {
+			result = result - row;
+		}
+	}
+
+	for (int r = 0; r < 3; r++) {
+		for (int c = 0; c < 3; c++) {
+			const auto cube = BitBoard::cube(r, c);
+			if ((after_add & cube) == cube) {
+				result = result - cube;
+			}
+		}
+	}
+	
+	return GameState(result);
 }
 
 bool NextGameStateIterator::operator!=(NextGameStateIterator other) const {

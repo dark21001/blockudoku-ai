@@ -41,6 +41,7 @@ public:
 	explicit Piece(uint64_t a);
 	BitBoard getBitBoard() const;
 	static PieceIteratorGenerator getAll();
+	static Piece getRandom();
 
 };
 
@@ -69,12 +70,13 @@ public:
 class NextGameStateIteratorGenerator;
 class GameState {
 private:
-	const BitBoard bb;
+	BitBoard bb;
 
 public:
 	explicit GameState(BitBoard bb);
 	BitBoard getBitBoard() const;
 	NextGameStateIteratorGenerator nextStates(Piece piece) const;
+	uint64_t simpleEval() const;
 };
 
 class NextGameStateIteratorGenerator;

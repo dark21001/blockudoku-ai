@@ -72,6 +72,7 @@ void testBitBoardBasics() {
 		for (auto p2 : Piece::getAll()) {
 			numSame += p1.getBitBoard() == p2.getBitBoard();
 		}
+		// No duplicates
 		BOOST_ASSERT(numSame == 1);
 	}
 	BOOST_ASSERT(numPieces == 47);
