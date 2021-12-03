@@ -82,6 +82,7 @@ private:
 
 public:
 	explicit GameState(BitBoard bb);
+	GameState();
 	BitBoard getBitBoard() const;
 	NextGameStateIteratorGenerator nextStates(Piece piece) const;
 	double simpleEval() const;

@@ -43,6 +43,9 @@ double simpleEvalTest(int numGames) {
 }
 
 int main(){
+	// TODO:
+	// - try better moves first.
+	// - constexpr things
 	srand(time(NULL));
 
 	auto game = GameState(BitBoard::empty());

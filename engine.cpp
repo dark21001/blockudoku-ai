@@ -419,48 +419,54 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 
 	// If we can clear with 2 pieces or fewer, then we must try permutations.
 	bool canClearWith2Pieces = false;
-	for (const auto after_p1 : game.nextStates(pieces[0])) {
-		if (after_p1.getBitBoard().count() < game.getBitBoard().count()) {
-			canClearWith2Pieces = true;
-		}
-		for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
-			if (after_p2.getBitBoard().count() < after_p1.getBitBoard().count()) {
+	for (int i = 0; i < 3; ++i) {
+		for (const auto after_p1 : game.nextStates(pieces[i])) {
+			if (after_p1.getBitBoard().count() < game.getBitBoard().count()) {
 				canClearWith2Pieces = true;
+				break;
 			}
-		}
-	}
-
-	do {
-		for (int clearsFirst = 1; clearsFirst >= 0; clearsFirst--) {
-			for (const auto after_p1 : game.nextStates(pieces[0])) {
-				const bool isClear = after_p1.getBitBoard().count() < game.getBitBoard().count();
-				if ((int)isClear != clearsFirst) {
+			for (int j = 0; j < 3; ++j) {
+				if (i == j) {
 					continue;
 				}
-				for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
-					for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
-						double total_after_p3 = 0;
-						for (const auto p4 : Piece::getAll()) {
-							double best_after_p4 = 99999999;
-							for (const auto after_p4 : after_p3.nextStates(p4)) {
-								best_after_p4 = std::min(best_after_p4,
-									after_p4.simpleEval());
-							}
-							total_after_p3 += best_after_p4;
-							if (total_after_p3 > bestScore) {
-								// It already looks shitty.
-								break;
-							}
-						}
-						if (total_after_p3 < bestScore) {
-							bestScore = total_after_p3;
-							bestNext = after_p3;
-						}
+				for (const auto after_p2 : after_p1.nextStates(pieces[j])) {
+					if (after_p2.getBitBoard().count() < after_p1.getBitBoard().count()) {
+						canClearWith2Pieces = true;
+						break;
 					}
 				}
 			}
 		}
+		if (canClearWith2Pieces) {
+			break;
+		}
+	}
 
+	// Foreach permutation of the pieces.
+	do {
+		for (const auto after_p1 : game.nextStates(pieces[0])) {
+			for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
+				for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
+					double total_after_p3 = 0;
+					for (const auto p4 : Piece::getAll()) {
+						double best_after_p4 = 99999999;
+						for (const auto after_p4 : after_p3.nextStates(p4)) {
+							best_after_p4 = std::min(best_after_p4,
+								after_p4.simpleEval());
+						}
+						total_after_p3 += best_after_p4;
+						if (total_after_p3 > bestScore) {
+							// It already looks shitty.
+							break;
+						}
+					}
+					if (total_after_p3 < bestScore) {
+						bestScore = total_after_p3;
+						bestNext = after_p3;
+					}
+				}
+			}
+		}
 	} while (canClearWith2Pieces && std::next_permutation(pieces, pieces+3));
 
 	return bestNext;
