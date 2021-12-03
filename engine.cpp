@@ -12,6 +12,8 @@ namespace {
 	const uint64_t RIGHT_MOST_COLUMN_B = (1ULL << 8) | (1ULL << 17) | (1ULL << 26);
 	const uint64_t RIGHT_MOST_COLUMN_A = RIGHT_MOST_COLUMN_B
 		 | (1ULL << 35) | (1ULL << 44) | (1ULL << 53);
+	const uint64_t LEFT_MOST_COLUMN_A = RIGHT_MOST_COLUMN_A >> 8;
+	const uint64_t LEFT_MOST_COLUMN_B = RIGHT_MOST_COLUMN_B >> 8;
 	const uint64_t ROW_5 = 0x1FFULL << (5 * 9);
 }
 
@@ -48,6 +50,10 @@ BitBoard BitBoard::operator&(const BitBoard other) const {
 
 BitBoard BitBoard::operator-(const BitBoard other) const {
 	return BitBoard(a &~other.a, b &~other.b);
+}
+
+BitBoard BitBoard::operator~() const {
+	return BitBoard((~a)&ALL_ALLOWED_BITS_IN_A, (~b)&ALL_ALLOWED_BITS_IN_B);
 }
 
 BitBoard BitBoard::empty() {
@@ -90,9 +96,24 @@ BitBoard BitBoard::shiftRight() const {
 	return BitBoard((a &~ RIGHT_MOST_COLUMN_A) << 1, (b&~RIGHT_MOST_COLUMN_B) << 1);
 }
 
+BitBoard BitBoard::shiftLeft() const {
+	return BitBoard((a &~ LEFT_MOST_COLUMN_A)>>1, (b&~LEFT_MOST_COLUMN_B) >>1);
+}
+
 BitBoard BitBoard::shiftDown() const {
 	return BitBoard((a << 9) & ALL_ALLOWED_BITS_IN_A, 
 		((b << 9) | (a & ROW_5) >> 45) & ALL_ALLOWED_BITS_IN_B);
+}
+
+BitBoard BitBoard::shiftUp() const {
+	return BitBoard((a >> 9) | ((b & 0x01FFULL) << 45), b >> 9);
+}
+
+int BitBoard::getHoleCount() const {
+	const auto open = ~(*this);
+	const auto numSingleGaps = (open - (open.shiftLeft() |
+		open.shiftRight() | open.shiftUp() | open.shiftDown())).count();
+	return numSingleGaps;
 }
 
 
@@ -289,6 +310,7 @@ double GameState::simpleEval() const {
 		}
 	}
 
+	//result += bb.getHoleCount() * 5;
 	return result;
 }
 
@@ -391,29 +413,36 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 	}
 
 	do {
-		for (const auto after_p1 : game.nextStates(pieces[0])) {
-			for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
-				for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
-					double total_after_p3 = 0;
-					for (const auto p4 : Piece::getAll()) {
-						double best_after_p4 = 99999999;
-						for (const auto after_p4 : after_p3.nextStates(p4)) {
-							best_after_p4 = std::min(best_after_p4,
-								(double)after_p4.simpleEval());
+		for (int clearsFirst = 1; clearsFirst >= 0; clearsFirst--) {
+			for (const auto after_p1 : game.nextStates(pieces[0])) {
+				const bool isClear = after_p1.getBitBoard().count() < game.getBitBoard().count();
+				if ((int)isClear != clearsFirst) {
+					continue;
+				}
+				for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
+					for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
+						double total_after_p3 = 0;
+						for (const auto p4 : Piece::getAll()) {
+							double best_after_p4 = 99999999;
+							for (const auto after_p4 : after_p3.nextStates(p4)) {
+								best_after_p4 = std::min(best_after_p4,
+									after_p4.simpleEval());
+							}
+							total_after_p3 += best_after_p4;
+							if (total_after_p3 > bestScore) {
+								// It already looks shitty.
+								break;
+							}
 						}
-						total_after_p3 += best_after_p4;
-						if (total_after_p3 > bestScore) {
-							// It already looks shitty.
-							break;
+						if (total_after_p3 < bestScore) {
+							bestScore = total_after_p3;
+							bestNext = after_p3;
 						}
-					}
-					if (total_after_p3 < bestScore) {
-						bestScore = total_after_p3;
-						bestNext = after_p3;
 					}
 				}
 			}
 		}
+
 	} while (canClearWith2Pieces && std::next_permutation(pieces, pieces+3));
 
 	return bestNext;

@@ -18,14 +18,18 @@ public:
 	static BitBoard row(unsigned r);
 	static BitBoard column(unsigned c);
 	static BitBoard cube(unsigned r, unsigned c);
+	int getHoleCount() const;
 
 	bool at(unsigned r, unsigned c) const;
 
 	BitBoard operator|(const BitBoard other) const;
 	BitBoard operator&(const BitBoard other) const;
 	BitBoard operator-(const BitBoard other) const;
+	BitBoard operator~() const;
 
+	BitBoard shiftLeft() const;
 	BitBoard shiftRight() const;
+	BitBoard shiftUp() const;
 	BitBoard shiftDown() const;
 
 	int count() const;
