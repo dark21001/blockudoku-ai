@@ -18,7 +18,6 @@ public:
 	static BitBoard row(unsigned r);
 	static BitBoard column(unsigned c);
 	static BitBoard cube(unsigned r, unsigned c);
-	int getHoleCount() const;
 	int getDiag2x2Count() const;
 
 	bool at(unsigned r, unsigned c) const;

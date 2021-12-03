@@ -26,8 +26,6 @@ void testBitBoardBasics() {
 			BOOST_ASSERT(~BitBoard::full() == BitBoard::empty());
 			BOOST_ASSERT(BitBoard::full() == ~BitBoard::empty());
 		}
-		BOOST_ASSERT(BitBoard::column(r).getHoleCount() == 0);
-		BOOST_ASSERT(BitBoard::row(r).getHoleCount() == 0);
 	}
 	
 	BOOST_ASSERT((BitBoard::row(5) | BitBoard::column(4)).count() == 17);
@@ -36,7 +34,6 @@ void testBitBoardBasics() {
 	for (int r = 0; r < 3; r++) {
 		for (int c = 0; c < 3; c++) {
 			BitBoard cube = BitBoard::cube(r, c);
-			BOOST_ASSERT(cube.getHoleCount() == 0);
 			BOOST_ASSERT(cube.count() == 9);
 			BOOST_ASSERT(cube == (~~cube));
 			acc_cubes = (acc_cubes | cube);
@@ -78,7 +75,6 @@ void testBitBoardBasics() {
 	assertNumPlacements(borders, 3 | (1<<9) | (1<<10), 6 * 6);
 
 	int numPieces = 0;
-	int holePieces = 0; // Mini L. XX. U, C
 	for (auto p1 : Piece::getAll()) {
 		numPieces++;
 		int numSame = 0;
@@ -92,9 +88,7 @@ void testBitBoardBasics() {
 		BOOST_ASSERT(p1bb.shiftRight().shiftLeft() == p1bb);
 		BOOST_ASSERT(p1bb.shiftDown().shiftUp() == p1bb);
 		BOOST_ASSERT(p1bb == (~~p1bb));
-		holePieces += p1bb.getHoleCount();
 	}
-	BOOST_ASSERT(holePieces == 9);
 	/*
 	 # # #  #    #    #
 	## ### #    ##   ##
@@ -108,10 +102,6 @@ void testBitBoardBasics() {
 	const auto bottom_right_cube = BitBoard::cube(2, 2);
 	BOOST_ASSERT(bottom_right_cube.shiftUp().shiftDown() == bottom_right_cube);
 	BOOST_ASSERT(bottom_right_cube.shiftLeft().shiftRight() == bottom_right_cube);
-
-	BOOST_ASSERT(BitBoard::empty().getHoleCount() == 0);
-	BOOST_ASSERT(BitBoard::full().getHoleCount() == 0);
-
 }
 
 int main()

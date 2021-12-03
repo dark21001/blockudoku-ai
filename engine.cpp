@@ -109,13 +109,6 @@ BitBoard BitBoard::shiftUp() const {
 	return BitBoard((a >> 9) | ((b & 0x01FFULL) << 45), b >> 9);
 }
 
-int BitBoard::getHoleCount() const {
-	const auto open = ~(*this);
-	const auto numSingleGaps = (open - (open.shiftLeft() |
-		open.shiftRight() | open.shiftUp() | open.shiftDown())).count();
-	return numSingleGaps;
-}
-
 int BitBoard::getDiag2x2Count() const {
 	const auto left = shiftLeft();
 	const auto down = shiftDown();
@@ -421,16 +414,14 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 	bool canClearWith2Pieces = false;
 	for (int i = 0; i < 3; ++i) {
 		for (const auto after_p1 : game.nextStates(pieces[i])) {
-			if (after_p1.getBitBoard().count() < game.getBitBoard().count()) {
-				canClearWith2Pieces = true;
-				break;
-			}
 			for (int j = 0; j < 3; ++j) {
 				if (i == j) {
 					continue;
 				}
 				for (const auto after_p2 : after_p1.nextStates(pieces[j])) {
-					if (after_p2.getBitBoard().count() < after_p1.getBitBoard().count()) {
+					if (after_p2.getBitBoard().count() <
+						game.getBitBoard().count() + pieces[i].getBitBoard().count() +
+						pieces[j].getBitBoard().count()) {
 						canClearWith2Pieces = true;
 						break;
 					}
@@ -443,10 +434,21 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 	}
 
 	// Foreach permutation of the pieces.
+	bool isPerm = false;
 	do {
 		for (const auto after_p1 : game.nextStates(pieces[0])) {
 			for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
 				for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
+					if (isPerm &&
+						after_p3.getBitBoard().count() == game.getBitBoard().count()
+						+ pieces[0].getBitBoard().count() + 
+						pieces[1].getBitBoard().count() +
+						pieces[2].getBitBoard().count()
+						) {
+						// No clears. This position was seen in a previous permutation.
+						continue;
+					}
+
 					double total_after_p3 = 0;
 					for (const auto p4 : Piece::getAll()) {
 						double best_after_p4 = 99999999;
@@ -467,6 +469,7 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 				}
 			}
 		}
+		isPerm = true;
 	} while (canClearWith2Pieces && std::next_permutation(pieces, pieces+3));
 
 	return bestNext;
