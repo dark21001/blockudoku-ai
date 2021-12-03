@@ -51,7 +51,7 @@ int main(){
 		turns++;
 		cout << "===== TURN " << turns << endl;
 		cout << game.getBitBoard().str() << endl;
-
+	
 		const auto p1 = Piece::getRandom();
 		const auto p2 = Piece::getRandom();
 		const auto p3 = Piece::getRandom();
@@ -63,9 +63,6 @@ int main(){
 			break;
 		}
 	}
-	
-	string foo;
-	cout << "Game OVER!" << endl;
-	cin >> foo;
+	system("pause");
 	return 0;
 }

@@ -116,6 +116,23 @@ int BitBoard::getHoleCount() const {
 	return numSingleGaps;
 }
 
+int BitBoard::getDiag2x2Count() const {
+	const auto left = shiftLeft();
+	const auto down = shiftDown();
+	const auto up = shiftUp();
+	// .#
+	// #.
+	const auto first =
+		(((*this) & down.shiftLeft()) - (down | left)).count();
+
+	// #.
+	// .#
+	const auto second = 
+		(((*this) & up.shiftLeft()) - (up | left)).count();
+	return first + second;
+}
+
+
 
 int BitBoard::count() const {
 	return (int)std::bitset<64>(a).count() + (int)std::bitset<64>(b).count();
@@ -310,7 +327,8 @@ double GameState::simpleEval() const {
 		}
 	}
 
-	//result += bb.getHoleCount() * 5;
+	result += bb.getDiag2x2Count();
+
 	return result;
 }
 
