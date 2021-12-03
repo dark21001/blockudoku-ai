@@ -80,6 +80,7 @@ public:
 	BitBoard getBitBoard() const;
 	NextGameStateIteratorGenerator nextStates(Piece piece) const;
 	double simpleEval() const;
+	bool isOver() const;
 };
 
 class NextGameStateIteratorGenerator;
@@ -112,5 +113,6 @@ public:
 
 class AI {
 public:
-	static GameState makeMove(GameState state, Piece p1, Piece p2, Piece p3);
+	static GameState makeMoveSimple(GameState state, Piece p1, Piece p2, Piece p3);
+	static GameState makeMoveLookhead(GameState state, Piece p1, Piece p2, Piece p3);
 };

@@ -257,6 +257,9 @@ bool PieceIterator::operator!=(PieceIterator other) const {
 
 // ====== Game State
 GameState::GameState(BitBoard bb) : bb(bb) {}
+bool GameState::isOver() const {
+	return bb == BitBoard::full();
+}
 BitBoard GameState::getBitBoard() const {
 	return bb;
 }
@@ -265,8 +268,10 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 }
 
 double GameState::simpleEval() const {
-	double result = bb.count();
+	double result = 0;
+	result += bb.count();
 
+	
 	for (int i = 0; i < 9; i++) {
 		if (bb & BitBoard::column(i)) {
 			result += 1;
@@ -279,7 +284,7 @@ double GameState::simpleEval() const {
 	for (int r = 0; r < 3; ++r) {
 		for (int c = 0; c < 3; ++c) {
 			if (bb & BitBoard::cube(r, c)) {
-				result += 1;
+				result += 3;
 			}
 		}
 	}
@@ -365,7 +370,7 @@ NextGameStateIterator NextGameStateIteratorGenerator::end() const {
 }
 
 // ====== AI
-GameState AI::makeMove(GameState game, Piece p1, Piece p2, Piece p3) {
+GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 	Piece pieces[3] = { p1, p2, p3 };
 	std::sort(pieces, pieces+3);
 
@@ -410,6 +415,30 @@ GameState AI::makeMove(GameState game, Piece p1, Piece p2, Piece p3) {
 			}
 		}
 	} while (canClearWith2Pieces && std::next_permutation(pieces, pieces+3));
+
+	return bestNext;
+}
+
+GameState AI::makeMoveSimple(GameState game, Piece p1, Piece p2, Piece p3) {
+	Piece pieces[3] = { p1, p2, p3 };
+	std::sort(pieces, pieces + 3);
+
+	double bestScore = 9999999999;
+	auto bestNext = GameState(BitBoard::full());
+
+	do {
+		for (const auto after_p1 : game.nextStates(pieces[0])) {
+			for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
+				for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
+					const auto score = after_p3.simpleEval();
+					if (score < bestScore) {
+						bestScore = score;
+						bestNext = after_p3;
+					}
+				}
+			}
+		}
+	} while (std::next_permutation(pieces, pieces + 3));
 
 	return bestNext;
 }
