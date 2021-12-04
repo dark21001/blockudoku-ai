@@ -6,10 +6,10 @@
 
 void assertNumPlacements(
 	BitBoard board,
-	uint64_t piece,
+	Piece piece,
 	int expected) {
 	int c = 0;
-	for (const GameState x : GameState(board).nextStates(Piece(piece))) {
+	for (const GameState x : GameState(board).nextStates(piece)) {
 		c++;
 	}
 	BOOST_ASSERT(c == expected);
@@ -63,16 +63,16 @@ void testBitBoardBasics() {
 	BOOST_ASSERT(BitBoard::full().shiftUp().shiftRight().shiftDown()
 		.shiftDown().shiftLeft().shiftLeft().count() == 49);
 
-	assertNumPlacements(BitBoard::empty(), 1, 81);
-	assertNumPlacements(BitBoard::full(), 1, 0);
-	assertNumPlacements(BitBoard::full() - BitBoard::column(4), 1, 9);
-	assertNumPlacements(BitBoard::empty(), 7, 9*7);
-	assertNumPlacements(BitBoard::empty(), 3 | (1<<9), 8*8);
+	assertNumPlacements(BitBoard::empty(), Piece(1), 81);
+	assertNumPlacements(BitBoard::full(), Piece(1), 0);
+	assertNumPlacements(BitBoard::full() - BitBoard::column(4), Piece(1), 9);
+	assertNumPlacements(BitBoard::empty(), Piece(7), 9*7);
+	assertNumPlacements(BitBoard::empty(), Piece(3 | (1<<9)), 8*8);
 
 	const BitBoard borders = BitBoard::column(0) | BitBoard::column(8) |
 		BitBoard::row(0) | BitBoard::row(8);
-	assertNumPlacements(borders, 1, 7*7);
-	assertNumPlacements(borders, 3 | (1<<9) | (1<<10), 6 * 6);
+	assertNumPlacements(borders, Piece(1), 7*7);
+	assertNumPlacements(borders, Piece(3 | (1<<9) | (1<<10)), 6 * 6);
 
 	int numPieces = 0;
 	for (auto p1 : Piece::getAll()) {
@@ -88,6 +88,17 @@ void testBitBoardBasics() {
 		BOOST_ASSERT(p1bb.shiftRight().shiftLeft() == p1bb);
 		BOOST_ASSERT(p1bb.shiftDown().shiftUp() == p1bb);
 		BOOST_ASSERT(p1bb == (~~p1bb));
+
+		int highestRow = 0, highestCol = 0;
+		for (int i = 0; i < 9; ++i) {
+			if (p1bb & BitBoard::row(i)) {
+				highestRow = i;
+			}
+			if (p1bb & BitBoard::column(i)) {
+				highestCol = i;
+			}
+		}
+		assertNumPlacements(BitBoard::empty(), p1, (9 - highestCol) * (9 - highestRow));
 	}
 	/*
 	 # # #  #    #    #

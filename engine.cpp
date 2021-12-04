@@ -11,7 +11,7 @@ namespace {
 	const uint64_t ALL_ALLOWED_BITS_IN_B = 0x7FFFFFFULL;
 	const uint64_t RIGHT_MOST_COLUMN_B = (1ULL << 8) | (1ULL << 17) | (1ULL << 26);
 	const uint64_t RIGHT_MOST_COLUMN_A = RIGHT_MOST_COLUMN_B
-		 | (1ULL << 35) | (1ULL << 44) | (1ULL << 53);
+		| (1ULL << 35) | (1ULL << 44) | (1ULL << 53);
 	const uint64_t LEFT_MOST_COLUMN_A = RIGHT_MOST_COLUMN_A >> 8;
 	const uint64_t LEFT_MOST_COLUMN_B = RIGHT_MOST_COLUMN_B >> 8;
 	const uint64_t ROW_5 = 0x1FFULL << (5 * 9);
@@ -49,11 +49,11 @@ BitBoard BitBoard::operator&(const BitBoard other) const {
 }
 
 BitBoard BitBoard::operator-(const BitBoard other) const {
-	return BitBoard(a &~other.a, b &~other.b);
+	return BitBoard(a & ~other.a, b & ~other.b);
 }
 
 BitBoard BitBoard::operator~() const {
-	return BitBoard((~a)&ALL_ALLOWED_BITS_IN_A, (~b)&ALL_ALLOWED_BITS_IN_B);
+	return BitBoard((~a) & ALL_ALLOWED_BITS_IN_A, (~b) & ALL_ALLOWED_BITS_IN_B);
 }
 
 BitBoard BitBoard::empty() {
@@ -70,7 +70,7 @@ BitBoard BitBoard::row(unsigned r) {
 		return BitBoard(ROW_0 << (r * 9), 0);
 	}
 	else {
-		return BitBoard(0, ROW_0 << ((r - 6)*9));
+		return BitBoard(0, ROW_0 << ((r - 6) * 9));
 	}
 }
 
@@ -84,7 +84,7 @@ BitBoard BitBoard::cube(unsigned r, unsigned c) {
 	assert(c < 3);
 	assert(r < 3);
 	if (r < 2) {
-		return BitBoard(TOP_LEFT_CUBE << (3*c + 27*r), 0);
+		return BitBoard(TOP_LEFT_CUBE << (3 * c + 27 * r), 0);
 	}
 	else {
 		return BitBoard(0, TOP_LEFT_CUBE << 3 * c);
@@ -93,15 +93,15 @@ BitBoard BitBoard::cube(unsigned r, unsigned c) {
 
 
 BitBoard BitBoard::shiftRight() const {
-	return BitBoard((a &~ RIGHT_MOST_COLUMN_A) << 1, (b&~RIGHT_MOST_COLUMN_B) << 1);
+	return BitBoard((a & ~RIGHT_MOST_COLUMN_A) << 1, (b & ~RIGHT_MOST_COLUMN_B) << 1);
 }
 
 BitBoard BitBoard::shiftLeft() const {
-	return BitBoard((a &~ LEFT_MOST_COLUMN_A)>>1, (b&~LEFT_MOST_COLUMN_B) >>1);
+	return BitBoard((a & ~LEFT_MOST_COLUMN_A) >> 1, (b & ~LEFT_MOST_COLUMN_B) >> 1);
 }
 
 BitBoard BitBoard::shiftDown() const {
-	return BitBoard((a << 9) & ALL_ALLOWED_BITS_IN_A, 
+	return BitBoard((a << 9) & ALL_ALLOWED_BITS_IN_A,
 		((b << 9) | (a & ROW_5) >> 45) & ALL_ALLOWED_BITS_IN_B);
 }
 
@@ -120,7 +120,7 @@ int BitBoard::getDiag2x2Count() const {
 
 	// #.
 	// .#
-	const auto second = 
+	const auto second =
 		(((*this) & up.shiftLeft()) - (up | left)).count();
 	return first + second;
 }
@@ -147,14 +147,14 @@ std::string BitBoard::str() const {
 }
 
 // ====== Piece
-Piece::Piece(uint64_t a): bb(BitBoard(a, 0)) {}
-Piece::Piece() : bb(BitBoard::empty()){};
+Piece::Piece(uint64_t a) : bb(BitBoard(a, 0)) {}
+Piece::Piece() : bb(BitBoard::empty()) {};
 BitBoard Piece::getBitBoard() const {
 	return bb;
 }
 
 
-PieceIterator::PieceIterator(uint8_t i): i(i)  {}
+PieceIterator::PieceIterator(uint8_t i) : i(i) {}
 
 PieceIterator PieceIteratorGenerator::begin() const {
 	return PieceIterator(0);
@@ -266,7 +266,7 @@ bool Piece::operator<(Piece other) const {
 }
 
 PieceIterator PieceIteratorGenerator::end() const {
-	return PieceIterator(sizeof PIECES / sizeof *PIECES);
+	return PieceIterator(sizeof PIECES / sizeof * PIECES);
 }
 
 Piece PieceIterator::operator*() const {
@@ -298,23 +298,40 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 	return NextGameStateIteratorGenerator(*this, piece);
 }
 
-double GameState::simpleEval() const {
-	double result = 0;
+uint64_t GameState::simpleEval() const {
+	uint64_t result = 0;
 	result += bb.count();
 
-	
 	for (int i = 0; i < 9; i++) {
-		if (bb & BitBoard::column(i)) {
+		const auto col_bits_a = RIGHT_MOST_COLUMN_A >> i;
+		const auto col_bits_b = RIGHT_MOST_COLUMN_B >> i;
+		if ((bb.a & col_bits_a) | (bb.b & col_bits_b)) {
 			result += 1;
 		}
-		if (bb & BitBoard::row(i)) {
+
+	}
+
+	for (int i = 0; i < 6; ++i) {
+		const auto row_bits_a = ROW_0 << (i * 9);
+		if (row_bits_a & bb.a) {
 			result += 1;
 		}
 	}
 
-	for (int r = 0; r < 3; ++r) {
-		for (int c = 0; c < 3; ++c) {
-			if (bb & BitBoard::cube(r, c)) {
+	for (int i = 0; i < 3; ++i) {
+		const auto row_bits_b = ROW_0 << (i * 9);
+		if (row_bits_b & bb.b) {
+			result += 1;
+		}
+	}
+
+	for (int r = 0; r < 2; r++) {
+		for (int c = 0; c < 3; c++) {
+			const auto cube_bits = TOP_LEFT_CUBE << (c * 3 + 27 * r);
+			if ((bb.a & cube_bits)) {
+				result += 3;
+			}
+			if (r == 0 && (bb.b & cube_bits)) {
 				result += 3;
 			}
 		}
@@ -325,8 +342,7 @@ double GameState::simpleEval() const {
 	return result;
 }
 
-
-NextGameStateIterator::NextGameStateIterator(GameState state, Piece piece):
+NextGameStateIterator::NextGameStateIterator(GameState state, Piece piece) :
 	original(state), left(piece.getBitBoard()), next(piece.getBitBoard()) {
 	if (!canPlace()) {
 		operator++();
@@ -335,28 +351,46 @@ NextGameStateIterator::NextGameStateIterator(GameState state, Piece piece):
 
 GameState NextGameStateIterator::operator*() const {
 	const auto after_add = original.getBitBoard() | next;
-	auto result = after_add;
-	for (int i = 0; i < 9; i++) {
-		const auto col = BitBoard::column(i);
-		if ((after_add & col) == col) {
-			result = result - col;
-		}
-		const auto row = BitBoard::row(i);
-		if ((after_add & row) == row) {
-			result = result - row;
-		}
-	}
+	auto to_clear = BitBoard::empty();
 
-	for (int r = 0; r < 3; r++) {
-		for (int c = 0; c < 3; c++) {
-			const auto cube = BitBoard::cube(r, c);
-			if ((after_add & cube) == cube) {
-				result = result - cube;
+	for (int i = 0; i < 9; i++) {
+		{
+			const auto a_col_bits = RIGHT_MOST_COLUMN_A >> i;
+			const auto b_col_bits = RIGHT_MOST_COLUMN_B >> i;
+			if ((after_add.a & a_col_bits) == a_col_bits &&
+				(after_add.b & b_col_bits) == b_col_bits) {
+				to_clear.a |= a_col_bits;
+				to_clear.b |= b_col_bits;
 			}
 		}
 	}
-	
-	return GameState(result);
+
+	for (int i = 0; i < 6; ++i) {
+		const auto row_bits = ROW_0 << (9 * i);
+		if ((after_add.a & row_bits) == row_bits) {
+			to_clear.a |= row_bits;
+		}
+	}
+	for (int i = 0; i < 3; ++i) {
+		const auto row_bits = ROW_0 << (9 * i);
+		if ((after_add.b & row_bits) == row_bits) {
+			to_clear.b |= row_bits;
+		}
+	}
+
+	for (int r = 0; r < 2; r++) {
+		for (int c = 0; c < 3; c++) {
+			const auto cube_bits = TOP_LEFT_CUBE << (c * 3 + 27 * r);
+			if ((after_add.a & cube_bits) == cube_bits) {
+				to_clear.a |= cube_bits;
+			}
+			if (r == 0 && (after_add.b & cube_bits) == cube_bits) {
+				to_clear.b |= cube_bits;
+			}
+		}
+	}
+
+	return GameState(after_add - to_clear);
 }
 
 bool NextGameStateIterator::operator!=(NextGameStateIterator other) const {
@@ -389,7 +423,7 @@ bool NextGameStateIterator::canPlace() const {
 }
 
 NextGameStateIteratorGenerator::NextGameStateIteratorGenerator(
-	GameState state, Piece piece):
+	GameState state, Piece piece) :
 	state(state), piece(piece) {
 }
 
@@ -405,9 +439,9 @@ NextGameStateIterator NextGameStateIteratorGenerator::end() const {
 // ====== AI
 GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 	Piece pieces[3] = { p1, p2, p3 };
-	std::sort(pieces, pieces+3);
+	std::sort(pieces, pieces + 3);
 
-	double bestScore = 9999999999;
+	uint64_t bestScore = 9999999999;
 	auto bestNext = GameState(BitBoard::full());
 
 	// If we can clear with 2 pieces or fewer, then we must try permutations.
@@ -441,7 +475,7 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 				for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
 					if (isPerm &&
 						after_p3.getBitBoard().count() == game.getBitBoard().count()
-						+ pieces[0].getBitBoard().count() + 
+						+ pieces[0].getBitBoard().count() +
 						pieces[1].getBitBoard().count() +
 						pieces[2].getBitBoard().count()
 						) {
@@ -449,9 +483,9 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 						continue;
 					}
 
-					double total_after_p3 = 0;
+					uint64_t total_after_p3 = 0;
 					for (const auto p4 : Piece::getAll()) {
-						double best_after_p4 = 99999999;
+						uint64_t best_after_p4 = 99999999;
 						for (const auto after_p4 : after_p3.nextStates(p4)) {
 							best_after_p4 = std::min(best_after_p4,
 								after_p4.simpleEval());
@@ -470,7 +504,7 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 			}
 		}
 		isPerm = true;
-	} while (canClearWith2Pieces && std::next_permutation(pieces, pieces+3));
+	} while (canClearWith2Pieces && std::next_permutation(pieces, pieces + 3));
 
 	return bestNext;
 }
@@ -479,7 +513,7 @@ GameState AI::makeMoveSimple(GameState game, Piece p1, Piece p2, Piece p3) {
 	Piece pieces[3] = { p1, p2, p3 };
 	std::sort(pieces, pieces + 3);
 
-	double bestScore = 9999999999;
+	uint64_t bestScore = 9999;
 	auto bestNext = GameState(BitBoard::full());
 
 	do {

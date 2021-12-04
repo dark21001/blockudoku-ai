@@ -32,20 +32,17 @@ double simpleEvalTest(int numGames) {
 			const auto p1 = Piece::getRandom();
 			const auto p2 = Piece::getRandom();
 			const auto p3 = Piece::getRandom();
-			
+
 			game = AI::makeMoveSimple(game,
 				p1, p2, p3);
 		} while (!game.isOver());
 		scores.push_back(score);
 	}
 	sort(scores.begin(), scores.end());
-	return scores[numGames/2];
+	return scores[numGames / 2];
 }
 
-int main(){
-	// TODO:
-	// - try better moves first.
-	// - constexpr things
+int main() {
 	srand(time(NULL));
 
 	auto game = GameState(BitBoard::empty());
@@ -54,7 +51,7 @@ int main(){
 		turns++;
 		cout << "===== TURN " << turns << endl;
 		cout << game.getBitBoard().str() << endl;
-	
+
 		const auto p1 = Piece::getRandom();
 		const auto p2 = Piece::getRandom();
 		const auto p3 = Piece::getRandom();

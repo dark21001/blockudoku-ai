@@ -2,11 +2,13 @@
 #include <cstdint>
 #include <string>
 
-
+class GameState;
+class NextGameStateIterator;
 class BitBoard {
 private:
 	uint64_t a, b;
-	
+	friend class NextGameStateIterator;
+	friend class GameState;
 public:
 	explicit BitBoard(uint64_t a, uint64_t b);
 	operator bool() const;
@@ -58,7 +60,7 @@ private:
 	PieceIterator(uint8_t i);
 	friend class PieceIteratorGenerator;
 public:
-	
+
 	Piece operator*() const;
 	bool operator!=(PieceIterator other) const;
 	void operator++();
@@ -83,14 +85,14 @@ public:
 	explicit GameState(BitBoard bb);
 	BitBoard getBitBoard() const;
 	NextGameStateIteratorGenerator nextStates(Piece piece) const;
-	double simpleEval() const;
+	uint64_t simpleEval() const;
 	bool isOver() const;
 };
 
 class NextGameStateIteratorGenerator;
 class NextGameStateIterator {
 public:
-	
+
 	GameState operator*() const;
 	bool operator!=(NextGameStateIterator other) const;
 	void operator++();
@@ -111,7 +113,7 @@ private:
 public:
 	NextGameStateIterator begin() const;
 	NextGameStateIterator end() const;
-	
+
 
 };
 
