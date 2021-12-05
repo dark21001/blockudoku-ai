@@ -1,10 +1,10 @@
 ﻿// blockudoku-solver.cpp : Defines the entry point for the application.
 //
 
-#include "blockudoku-solver.h"
 #include "engine.h"
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 using namespace std;
 
@@ -13,7 +13,7 @@ void printPieceSet(Piece p1, Piece p2, Piece p3) {
 	for (int i = 0; i < 5; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			for (int k = 0; k < 6; k++) {
-				cout << (pieces[j].getBitBoard().at(i, k) ? '#' : '.');
+				cout << (pieces[j].getBitBoard().at(i, k) ? '#' : ' ');
 			}
 		}
 		cout << endl;
@@ -33,8 +33,8 @@ double simpleEvalTest(int numGames) {
 			const auto p2 = Piece::getRandom();
 			const auto p3 = Piece::getRandom();
 
-			game = AI::makeMoveSimple(game,
-				p1, p2, p3);
+			game = AI::makeMoveSimple(game, p1, p2, p3);
+
 		} while (!game.isOver());
 		scores.push_back(score);
 	}
@@ -63,6 +63,7 @@ int main() {
 			break;
 		}
 	}
+	cout << "Game over!" << endl;
 	system("pause");
 	return 0;
 }

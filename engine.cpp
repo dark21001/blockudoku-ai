@@ -339,6 +339,15 @@ uint64_t GameState::simpleEval() const {
 
 	result += bb.getDiag2x2Count();
 
+	const auto open = ~bb;
+
+	// #.#
+	result += (open - open.shiftRight() - open.shiftLeft()).count();
+
+	// #
+	// .
+	// #
+	result += (open - open.shiftUp() - open.shiftDown()).count();
 	return result;
 }
 
