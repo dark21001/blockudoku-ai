@@ -337,8 +337,7 @@ uint64_t GameState::simpleEval() const {
 		}
 	}
 
-	result += bb.getDiag2x2Count();
-
+	result += bb.getDiag2x2Count() * 2;
 	const auto open = ~bb;
 
 	// #.#
@@ -350,6 +349,7 @@ uint64_t GameState::simpleEval() const {
 	result += (open - open.shiftUp() - open.shiftDown()).count();
 	return result;
 }
+
 
 NextGameStateIterator::NextGameStateIterator(GameState state, Piece piece) :
 	original(state), left(piece.getBitBoard()), next(piece.getBitBoard()) {

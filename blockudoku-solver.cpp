@@ -26,7 +26,7 @@ double simpleEvalTest(int numGames) {
 	for (int i = 0; i < numGames; ++i) {
 		auto game = GameState(BitBoard::empty());
 		int score = 0;
-		cout << i << '/' << numGames << endl;
+		
 		do {
 			score += 1;
 			const auto p1 = Piece::getRandom();
@@ -36,6 +36,7 @@ double simpleEvalTest(int numGames) {
 			game = AI::makeMoveSimple(game, p1, p2, p3);
 
 		} while (!game.isOver());
+		cout << (i+1) << '/' << numGames << ' ' << score << endl;
 		scores.push_back(score);
 	}
 	sort(scores.begin(), scores.end());
@@ -44,6 +45,10 @@ double simpleEvalTest(int numGames) {
 
 int main() {
 	srand(time(NULL));
+
+	cout << "Fitness: " << simpleEvalTest(100) << endl;
+	system("PAUSE");
+	return 0;
 
 	auto game = GameState(BitBoard::empty());
 	int turns = 0;
