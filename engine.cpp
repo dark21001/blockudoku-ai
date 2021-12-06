@@ -56,6 +56,26 @@ BitBoard BitBoard::operator~() const {
 	return BitBoard((~a) & ALL_ALLOWED_BITS_IN_A, (~b) & ALL_ALLOWED_BITS_IN_B);
 }
 
+BitBoard BitBoard::topDownFlip() const {
+	auto result = BitBoard::empty();
+	for (int r = 0; r < 9; ++r) {
+		auto r_mirror = 8 - r;
+		auto bits = (*this) & BitBoard::row(r_mirror);
+		while (r_mirror != r) {
+			if (r_mirror > r) {
+				r_mirror--;
+				bits = bits.shiftUp();
+			}
+			else {
+				r_mirror++;
+				bits = bits.shiftDown();
+			}
+		}
+		result = result | bits;
+	}
+	return result;
+}
+
 BitBoard BitBoard::empty() {
 	return BitBoard(0, 0);
 }
@@ -298,8 +318,9 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 	return NextGameStateIteratorGenerator(*this, piece);
 }
 
-uint64_t GameState::simpleEval() const {
+uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	uint64_t result = 0;
+
 	result += bb.count();
 
 	for (int i = 0; i < 9; i++) {
@@ -308,7 +329,6 @@ uint64_t GameState::simpleEval() const {
 		if ((bb.a & col_bits_a) | (bb.b & col_bits_b)) {
 			result += 1;
 		}
-
 	}
 
 	for (int i = 0; i < 6; ++i) {
@@ -341,12 +361,24 @@ uint64_t GameState::simpleEval() const {
 	const auto open = ~bb;
 
 	// #.#
-	result += (open - open.shiftRight() - open.shiftLeft()).count();
+	const auto horizontal_squashed = (open - open.shiftRight() - open.shiftLeft());
+	result += horizontal_squashed.count();
 
 	// #
 	// .
 	// #
-	result += (open - open.shiftUp() - open.shiftDown()).count();
+	const auto verticle_squashed = (open - open.shiftUp() - open.shiftDown());
+	result += verticle_squashed.count();
+
+	return result;
+}
+
+uint64_t GameState::simpleEval() const {
+	const auto result = simpleEvalImpl(bb);
+
+	assert(bb == bb.topDownFlip().topDownFlip());
+	assert(result == simpleEvalImpl(bb.topDownFlip()));
+
 	return result;
 }
 
@@ -493,7 +525,13 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 					}
 
 					uint64_t total_after_p3 = 0;
+					bool is_1x1 = true;
 					for (const auto p4 : Piece::getAll()) {
+						if (is_1x1) {
+							// Skip the 1x1 block cause. It's too optimistic :P .
+							is_1x1 = false;
+							continue;
+						}
 						uint64_t best_after_p4 = 99999999;
 						for (const auto after_p4 : after_p3.nextStates(p4)) {
 							best_after_p4 = std::min(best_after_p4,

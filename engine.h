@@ -34,6 +34,8 @@ public:
 	BitBoard shiftUp() const;
 	BitBoard shiftDown() const;
 
+	BitBoard topDownFlip() const;
+
 	int count() const;
 
 	std::string str() const;
@@ -80,7 +82,7 @@ class NextGameStateIteratorGenerator;
 class GameState {
 private:
 	BitBoard bb;
-
+	static uint64_t simpleEvalImpl(BitBoard bb);
 public:
 	explicit GameState(BitBoard bb);
 	BitBoard getBitBoard() const;
