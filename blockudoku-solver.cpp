@@ -45,10 +45,10 @@ double simpleEvalTest(int numGames) {
 
 int main() {
 	srand(time(NULL));
-	
+	/*
 	cout << "Fitness: " << simpleEvalTest(100) << endl;
 	system("pause");
-	return 0;
+	return 0;*/
 
 	auto game = GameState(BitBoard::empty());
 	int turns = 0;
@@ -63,11 +63,17 @@ int main() {
 		printPieceSet(p1, p2, p3);
 		cout << endl;
 
-		const auto next = AI::makeMoveLookhead(game, p1, p2, p3);
+		const auto next = AI::makeMoveLookahead(game, p1, p2, p3);
 		if (next.getBitBoard() == BitBoard::full()) {
 			break;
 		}
-
+		/*
+		if (next.getBitBoard().count() == game.getBitBoard().count() +
+			p1.getBitBoard().count() + p2.getBitBoard().count()
+			+ p3.getBitBoard().count()) {
+			cout << next.getBitBoard().str() << endl;
+			system("pause");
+		}*/
 		game = next;
 	}
 	cout << "Game over!" << endl;

@@ -129,24 +129,6 @@ BitBoard BitBoard::shiftUp() const {
 	return BitBoard((a >> 9) | ((b & 0x01FFULL) << 45), b >> 9);
 }
 
-int BitBoard::getDiag2x2Count() const {
-	const auto left = shiftLeft();
-	const auto down = shiftDown();
-	const auto up = shiftUp();
-	// .#
-	// #.
-	const auto first =
-		(((*this) & down.shiftLeft()) - (down | left)).count();
-
-	// #.
-	// .#
-	const auto second =
-		(((*this) & up.shiftLeft()) - (up | left)).count();
-	return first + second;
-}
-
-
-
 int BitBoard::count() const {
 	return (int)std::bitset<64>(a).count() + (int)std::bitset<64>(b).count();
 }
@@ -321,8 +303,10 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	uint64_t result = 0;
 
+	// 1 point for each block on the board.
 	result += bb.count();
 
+	// 1 point for each occupied column.
 	for (int i = 0; i < 9; i++) {
 		const auto col_bits_a = RIGHT_MOST_COLUMN_A >> i;
 		const auto col_bits_b = RIGHT_MOST_COLUMN_B >> i;
@@ -331,13 +315,13 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 		}
 	}
 
+	// 1 point for each occupied row.
 	for (int i = 0; i < 6; ++i) {
 		const auto row_bits_a = ROW_0 << (i * 9);
 		if (row_bits_a & bb.a) {
 			result += 1;
 		}
 	}
-
 	for (int i = 0; i < 3; ++i) {
 		const auto row_bits_b = ROW_0 << (i * 9);
 		if (row_bits_b & bb.b) {
@@ -345,6 +329,7 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 		}
 	}
 
+	// 3 points for each occupied 3x3 section.
 	for (int r = 0; r < 2; r++) {
 		for (int c = 0; c < 3; c++) {
 			const auto cube_bits = TOP_LEFT_CUBE << (c * 3 + 27 * r);
@@ -357,18 +342,31 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 		}
 	}
 
-	result += bb.getDiag2x2Count() * 2;
 	const auto open = ~bb;
 
+	// 1 point for each open space with no horizontally adjacent open space.
 	// #.#
 	const auto horizontal_squashed = (open - open.shiftRight() - open.shiftLeft());
 	result += horizontal_squashed.count();
 
+	// 1 point for each open space with no vertically adjacent open space.
 	// #
 	// .
 	// #
 	const auto verticle_squashed = (open - open.shiftUp() - open.shiftDown());
 	result += verticle_squashed.count();
+
+	// 1 point for each open space that has 3 blocks adjacent to it.
+	const auto filled_right = bb.shiftLeft();
+	const auto filled_left = bb.shiftRight();
+	const auto filled_up = bb.shiftDown();
+	const auto filled_down = bb.shiftUp();
+	const auto open_and_filled_right = open & filled_right;
+	const auto open_and_filled_left = open & filled_left;
+	result += (open_and_filled_right & filled_down).count();
+	result += (open_and_filled_right & filled_up).count();
+	result += (open_and_filled_left & filled_down).count();
+	result += (open_and_filled_left & filled_up).count();
 
 	return result;
 }
@@ -394,6 +392,7 @@ GameState NextGameStateIterator::operator*() const {
 	const auto after_add = original.getBitBoard() | next;
 	auto to_clear = BitBoard::empty();
 
+	// Clear columns that are completely filled.
 	for (int i = 0; i < 9; i++) {
 		{
 			const auto a_col_bits = RIGHT_MOST_COLUMN_A >> i;
@@ -406,6 +405,7 @@ GameState NextGameStateIterator::operator*() const {
 		}
 	}
 
+	// Clear rows that are completely filled.
 	for (int i = 0; i < 6; ++i) {
 		const auto row_bits = ROW_0 << (9 * i);
 		if ((after_add.a & row_bits) == row_bits) {
@@ -419,6 +419,7 @@ GameState NextGameStateIterator::operator*() const {
 		}
 	}
 
+	// Clear 3x3s that are completely filled.
 	for (int r = 0; r < 2; r++) {
 		for (int c = 0; c < 3; c++) {
 			const auto cube_bits = TOP_LEFT_CUBE << (c * 3 + 27 * r);
@@ -439,6 +440,9 @@ bool NextGameStateIterator::operator!=(NextGameStateIterator other) const {
 }
 
 void NextGameStateIterator::operator++() {
+	// We try placing the piece in each row.
+	// We try the left most columns first.
+
 	do {
 		// We've reached the right edge.
 		if (next & BitBoard::column(8)) {
@@ -449,6 +453,7 @@ void NextGameStateIterator::operator++() {
 				break;
 			}
 
+			// Start at the first column of the next row.
 			left = left.shiftDown();
 			next = left;
 		}
@@ -478,7 +483,7 @@ NextGameStateIterator NextGameStateIteratorGenerator::end() const {
 }
 
 // ====== AI
-GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
+GameState AI::makeMoveLookahead(GameState game, Piece p1, Piece p2, Piece p3) {
 	Piece pieces[3] = { p1, p2, p3 };
 	std::sort(pieces, pieces + 3);
 
@@ -486,7 +491,7 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 	auto bestNext = GameState(BitBoard::full());
 
 	// If we can clear with 2 pieces or fewer, then we must try permutations.
-	bool canClearWith2Pieces = false;
+	bool can_clear_with_2_pieces = false;
 	for (int i = 0; i < 3; ++i) {
 		for (const auto after_p1 : game.nextStates(pieces[i])) {
 			for (int j = 0; j < 3; ++j) {
@@ -497,24 +502,24 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 					if (after_p2.getBitBoard().count() <
 						game.getBitBoard().count() + pieces[i].getBitBoard().count() +
 						pieces[j].getBitBoard().count()) {
-						canClearWith2Pieces = true;
+						can_clear_with_2_pieces = true;
 						break;
 					}
 				}
 			}
 		}
-		if (canClearWith2Pieces) {
+		if (can_clear_with_2_pieces) {
 			break;
 		}
 	}
 
 	// Foreach permutation of the pieces.
-	bool isPerm = false;
+	bool is_first_permutation = true;
 	do {
 		for (const auto after_p1 : game.nextStates(pieces[0])) {
 			for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
 				for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
-					if (isPerm &&
+					if (!is_first_permutation &&
 						after_p3.getBitBoard().count() == game.getBitBoard().count()
 						+ pieces[0].getBitBoard().count() +
 						pieces[1].getBitBoard().count() +
@@ -528,10 +533,11 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 					bool is_1x1 = true;
 					for (const auto p4 : Piece::getAll()) {
 						if (is_1x1) {
-							// Skip the 1x1 block cause. It's too optimistic :P .
+							// Be pessimistic and pretend we won't get a 1x1.
 							is_1x1 = false;
 							continue;
 						}
+
 						uint64_t best_after_p4 = 99999999;
 						for (const auto after_p4 : after_p3.nextStates(p4)) {
 							best_after_p4 = std::min(best_after_p4,
@@ -539,10 +545,11 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 						}
 						total_after_p3 += best_after_p4;
 						if (total_after_p3 > bestScore) {
-							// It already looks shitty.
+							// after_p3 is worse than the existing candidate already.
 							break;
 						}
 					}
+
 					if (total_after_p3 < bestScore) {
 						bestScore = total_after_p3;
 						bestNext = after_p3;
@@ -550,8 +557,8 @@ GameState AI::makeMoveLookhead(GameState game, Piece p1, Piece p2, Piece p3) {
 				}
 			}
 		}
-		isPerm = true;
-	} while (canClearWith2Pieces && std::next_permutation(pieces, pieces + 3));
+		is_first_permutation = false;
+	} while (can_clear_with_2_pieces && std::next_permutation(pieces, pieces + 3));
 
 	return bestNext;
 }
