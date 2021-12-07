@@ -21,7 +21,8 @@ void printPieceSet(Piece p1, Piece p2, Piece p3) {
 
 }
 
-double simpleEvalTest(int numGames) {
+// Call this to test changes to the evaluation function.
+double simpleEvalFitnessTest(int numGames) {
 	vector<double> scores;
 	for (int i = 0; i < numGames; ++i) {
 		auto game = GameState(BitBoard::empty());
@@ -44,11 +45,7 @@ double simpleEvalTest(int numGames) {
 }
 
 int main() {
-	srand(time(NULL));
-	/*
-	cout << "Fitness: " << simpleEvalTest(100) << endl;
-	system("pause");
-	return 0;*/
+	srand((unsigned)time(NULL));
 
 	auto game = GameState(BitBoard::empty());
 	int turns = 0;
@@ -67,16 +64,8 @@ int main() {
 		if (next.getBitBoard() == BitBoard::full()) {
 			break;
 		}
-		/*
-		if (next.getBitBoard().count() == game.getBitBoard().count() +
-			p1.getBitBoard().count() + p2.getBitBoard().count()
-			+ p3.getBitBoard().count()) {
-			cout << next.getBitBoard().str() << endl;
-			system("pause");
-		}*/
 		game = next;
 	}
 	cout << "Game over!" << endl;
-	system("pause");
 	return 0;
 }

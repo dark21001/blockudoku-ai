@@ -569,7 +569,6 @@ GameState AI::makeMoveSimple(GameState game, Piece p1, Piece p2, Piece p3) {
 
 	uint64_t bestScore = 9999;
 	auto bestNext = GameState(BitBoard::full());
-
 	do {
 		for (const auto after_p1 : game.nextStates(pieces[0])) {
 			for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
