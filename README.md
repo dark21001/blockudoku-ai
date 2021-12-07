@@ -22,6 +22,7 @@ Blockudoku-AI is a powerful engine for **Blockudoku**, a puzzle game by [EasyBra
 Each screen shows the board state and the 3 available pieces to place.
 
 ## How strong is Blockudoku-AI?
+The AI easily completes places 15,000 pieces before reaching a dead state. This is about 200,000 points.
 
 ## How does Blockudoku-AI work?
 The algorithm can be divided into Evaluation and Search.
@@ -39,18 +40,9 @@ The entire evaluation function is:
    - up to 2 points for each empty square that has no empty squares in 2 opposite cardinal directions.
 
 ### Searching
-The AI searches for the best next board state that can result from placing the 3 pieces.
+`AI::makeMoveSimple` picks the best next board state that can result from placing the 3 pieces. The best state is determined using the evaluation function. This search method evaluates considers up to about 100,000 positions per turn.
 
-The search function `AI::makeMoveLookahead` can be described as follows.
-```
-best_score = INF
-best_board_state = NULL
-foreach board_state in possible_next_board_states(current_board_state, piece_1, piece_2, piece_3):
-  
-  foreach piece_4 in get_all_pieces():
-    foreach board_state in possible_next_board_states(current_board_state, piece_4):
-      
+`AI::makeMoveLookahead` goes one level deeper and considers an imaginary 4th piece and all positions it can be placed. The best state is determined by the average score after placing the 4th piece.
 
-```
 
 ## How is the AI so fast?
