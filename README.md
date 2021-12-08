@@ -21,22 +21,18 @@ Blockudoku-AI is a powerful engine for **Blockudoku**, a puzzle game by [EasyBra
 ```
 Each screen shows the board state and the 3 available pieces to place.
 
-## How strong is Blockudoku-AI?
-The AI reaches turn 5000 (about 200,000 points) more than half the games it plays. It takes a string of bad luck for the game to end.
+## How strong is the engine?
+The engine reaches turn 5000 (about 200,000 points) more than half the games it plays. It takes a string of bad luck for the engine to lose.
 
-## How does Blockudoku-AI work?
+## How does the engine work?
 The algorithm can be divided into evaluation and search. 
 
-The board state and pieces are represented as [BitBoards](https://en.wikipedia.org/wiki/Bitboard) to make evaluation and search fast. 
-- The evaluation function is about 300 assembly instructions when compiled with `gcc -O3`.
-- 
+The board state and pieces are represented as [BitBoards](https://en.wikipedia.org/wiki/Bitboard) to make evaluation and search fast. For instance, the evaluation function is about 300 assembly instructions when compiled with `gcc -O3`.
 
 ### Evaluation
-The evaluation function `GameState::simpleEvalImpl` estimates how good a game state is. Better game states have fewer points.
+The evaluation function `GameState::simpleEvalImpl` estimates how good a game state is. Generally speaking, the evaluation function tries to keep the board clear, set up future clears, and avoid patterns that are difficult to clear.
 
-Generally speaking, the evaluation function tries to keep the board clear, set up future clears, and avoid patterns that are difficult to clear.
-
-The evaluation function gives points for:
+Better game states have fewer points. The evaluation function gives points for:
    - each occupied square
    - each row/column that contains an occupied square
    - each 3x3 block that contains an occupied square
@@ -47,5 +43,7 @@ The evaluation function gives points for:
 
 `AI::makeMoveLookahead`, the code actually used, goes one level deeper by considering the placement of a hypothetical 4th. The best state is determined by the average score after placing the 4th piece.
 
+TBD how many states we search.
+
 ## Why did I build this?
-A certain mermaid was better at Blockudoku than me. And cause my phone refused to let me play the game anymore. I hate this game :P !
+Because a certain mermaid is better at Blockudoku than me. And cause my phone refused to let me play the game anymore. I hate this game <3 !
