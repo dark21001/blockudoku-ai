@@ -21,13 +21,13 @@ Blockudoku-AI is a powerful engine for **Blockudoku**, a puzzle game by [EasyBra
 ```
 Each screen shows the board state and the 3 available pieces to place.
 
-## How strong is the engine?
-The engine reaches turn 5000 (about 200,000 points) more than half the games it plays. It takes a string of bad luck for the engine to lose.
+## How strong/fast is the engine?
+The engine reaches turn 5000 (about equivalent to 200,000 points) more than half the games it plays. The engine takes about 1 second per move when compiled with `gcc -O3` in 2021.
 
 ## How does the engine work?
 The algorithm can be divided into evaluation and search. 
 
-The board state and pieces are represented as [BitBoards](https://en.wikipedia.org/wiki/Bitboard) to make evaluation and search fast. For instance, the evaluation function is about 300 assembly instructions when compiled with `gcc -O3`.
+The board state and pieces are represented as [BitBoards](https://en.wikipedia.org/wiki/Bitboard) to make evaluation and search fast. For instance, the evaluation function is about 300 assembly instructions when optimized.
 
 ### Evaluation
 The evaluation function `GameState::simpleEvalImpl` estimates how good a game state is. Generally speaking, the evaluation function tries to keep the board clear, set up future clears, and avoid patterns that are difficult to clear.
