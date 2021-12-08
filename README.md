@@ -9,40 +9,41 @@ Blockudoku-AI is a powerful engine for **Blockudoku**, a puzzle game by [EasyBra
 .#.#.....               ##.#.....               ##.#..#..
 ...###...               ##.###...               .........
 .#.......               ###......               ..##.....
-.........               ###......               ..#......
+.........       ->      ###......       ->      ..#......
 #........               #........               .........
 ...#.....               ......#..               .##...#..
 ...##....               .........               .........
 ...##....               .........               .........
 
 #   ###   #             #    ##   #
-##   #  ###             ###  ##   ##              . . .
+##   #  ###             ###  ##   ##
 #    #                            #
 ```
 Each screen shows the board state and the 3 available pieces to place.
 
-## How strong is Blockudoku-AI?
-The AI easily completes places 15,000 pieces before reaching a dead state. This is about 200,000 points.
+## How strong is the engine?
+The engine reaches turn 5000 (about 200,000 points) more than half the games it plays. It takes a string of bad luck for the engine to lose.
 
-## How does Blockudoku-AI work?
-The algorithm can be divided into Evaluation and Search.
+## How does the engine work?
+The algorithm can be divided into evaluation and search. 
+
+The board state and pieces are represented as [BitBoards](https://en.wikipedia.org/wiki/Bitboard) to make evaluation and search fast. For instance, the evaluation function is about 300 assembly instructions when compiled with `gcc -O3`.
 
 ### Evaluation
-The evaluation function `GameState::simpleEvalImpl` estimates how good a game state is. Better game states have fewer points.
+The evaluation function `GameState::simpleEvalImpl` estimates how good a game state is. Generally speaking, the evaluation function tries to keep the board clear, set up future clears, and avoid patterns that are difficult to clear.
 
-Generally speaking, the evaluation function tries to keep the board clear, set up future clears, and avoid patterns that are difficult to clear.
-
-The entire evaluation function is:
-   - 1 point for each occupied square.
-   - 1 point for each row/column that contains an occupied square.
-   - 3 points for each 3x3 block that contains an occupied square.
-   - up to 4 points for each empty square that has occupied squares in 2 adjacent cardinal squares.
-   - up to 2 points for each empty square that has no empty squares in 2 opposite cardinal directions.
+Better game states have fewer points. The evaluation function gives points for:
+   - each occupied square
+   - each row/column that contains an occupied square
+   - each 3x3 block that contains an occupied square
+   - each empty square that has 2 or more occupied cardinally adjacent squares
 
 ### Searching
 `AI::makeMoveSimple` picks the best next board state that can result from placing the 3 pieces. The best state is determined using the evaluation function. This search method evaluates considers up to about 100,000 positions per turn.
 
-`AI::makeMoveLookahead` goes one level deeper and considers an imaginary 4th piece and all positions it can be placed. The best state is determined by the average score after placing the 4th piece.
+`AI::makeMoveLookahead`, the code actually used, goes one level deeper by considering the placement of a hypothetical 4th. The best state is determined by the average score after placing the 4th piece.
 
+TBD how many states we search.
 
-## How is the AI so fast?
+## Why did I build this?
+Because a certain mermaid is better at Blockudoku than me. And cause my phone refused to let me play the game anymore. I hate this game <3 !
