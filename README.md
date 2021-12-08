@@ -39,11 +39,9 @@ Better game states have fewer points. The evaluation function gives points for:
    - each empty square that has 2 or more occupied cardinally adjacent squares
 
 ### Searching
-`AI::makeMoveSimple` picks the best next board state that can result from placing the 3 pieces. The best state is determined using the evaluation function. This search method evaluates considers up to about 100,000 positions per turn.
+`AI::makeMoveSimple` picks the best next board state that can result from placing the 3 pieces. The best state is determined using the evaluation function. This search method evaluates about 100,000 positions per turn.
 
-`AI::makeMoveLookahead`, the code actually used, goes one level deeper by considering the placement of a hypothetical 4th. The best state is determined by the average score after placing the 4th piece.
-
-TBD how many states we search.
+`AI::makeMoveLookahead`, the code actually used, goes one level deeper by considering the placement of a hypothetical 4th. The best state is determined by the average score after placing the 4th piece. This search method typically evaluates about 100,000,000 positions per turn.
 
 ## Why did I build this?
-Because a certain mermaid is better at Blockudoku than me. And cause my phone refused to let me play the game anymore. I hate this game <3 !
+Because a certain mermaid is better at Blockudoku than me. And cause my phone refused to let me play the game anymore. I hate this game <3 
