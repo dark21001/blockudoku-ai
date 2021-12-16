@@ -2,23 +2,9 @@ Blockudoku-AI is a powerful engine for **Blockudoku**, a puzzle game by [EasyBra
 - [Blokudoku on Google Play](https://play.google.com/store/apps/details?id=com.easybrain.block.puzzle.games)
 - [Blokudoku on Apple Store](https://apps.apple.com/us/app/blockudoku-block-puzzle-game/id1452227871)
 
-`blockudoku-solver.cpp` is a terminal program that shows turns of Blockudoku played by the AI. Example output:
-```
-===== TURN 5327         ===== TURN 5328         ===== TURN 5329
-.........               .........               .........
-.#.#.....               ##.#.....               ##.#..#..
-...###...               ##.###...               .........
-.#.......               ###......               ..##.....
-.........       ->      ###......       ->      ..#......
-#........               #........               .........
-...#.....               ......#..               .##...#..
-...##....               .........               .........
-...##....               .........               .........
+`blockudoku-solver.cpp` is a terminal program that shows turns of Blockudoku played by the AI.
+<p><img style="width: 25%; height: 15%" src="/demo.gif?raw=true"/></p>
 
-#   ###   #             #    ##   #
-##   #  ###             ###  ##   ##
-#    #                            #
-```
 Each screen shows the board state and the 3 available pieces to place.
 
 ## How strong/fast is the engine?
