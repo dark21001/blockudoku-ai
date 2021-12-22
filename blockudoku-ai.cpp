@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <vector>
 #include <iostream>
+#include <atomic>
+#include <thread>
 
 using namespace std;
 
@@ -17,31 +19,51 @@ void printPieceSet(PieceSet piece_set) {
 		}
 		cout << endl;
 	}
+}
 
+int getNumTurnsSample() {
+	auto game = GameState(BitBoard::empty());
+	int score = 0;
+
+	do {
+		score += 1;
+		const auto piece_set = PieceSet::getRandom();
+		game = AI::makeMoveSimple(game, piece_set);
+
+	} while (!game.isOver());
+	return score;
 }
 
 // Call this to test changes to the evaluation function.
 double simpleEvalFitnessTest(int numGames) {
+	atomic<int> games_done(0);
 	vector<double> scores;
-	for (int i = 0; i < numGames; ++i) {
-		auto game = GameState(BitBoard::empty());
-		int score = 0;
+	std::vector<std::thread> workers;
+    for (int i = 0; i < std::thread::hardware_concurrency(); i++) {
+        workers.push_back(std::thread([&]()
+        {
+			while (games_done++ < numGames){
+				const auto score = getNumTurnsSample();
+				scores.push_back(score);
+				cout << scores.size() << '/' << numGames << ' ' << score << endl;
+			}
+        }));
+    }
+	std::for_each(workers.begin(), workers.end(), [](std::thread &t)
+    {
+        t.join();
+    });
 
-		do {
-			score += 1;
-			const auto piece_set = PieceSet::getRandom();
-			game = AI::makeMoveSimple(game, piece_set);
-
-		} while (!game.isOver());
-		cout << (i+1) << '/' << numGames << ' ' << score << endl;
-		scores.push_back(score);
-	}
 	sort(scores.begin(), scores.end());
 	return scores[numGames / 2];
 }
 
 int main() {
 	srand((unsigned)time(NULL));
+
+	cout << "Fitness: " << simpleEvalFitnessTest(1000) << endl;
+
+	return 0;
 
 	auto game = GameState(BitBoard::empty());
 	int turns = 0;
