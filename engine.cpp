@@ -148,6 +148,16 @@ BitBoard Piece::getBitBoard() const {
 	return bb;
 }
 
+PieceSet::PieceSet(Piece p1, Piece p2, Piece p3) {
+	pieces[0] = p1;
+	pieces[1] = p2;
+	pieces[2] = p3;
+}
+
+PieceSet PieceSet::getRandom() {
+	return PieceSet(Piece::getRandom(), Piece::getRandom(), Piece::getRandom());
+}
+
 
 PieceIterator::PieceIterator(uint8_t i) : i(i) {}
 
@@ -476,9 +486,8 @@ NextGameStateIterator NextGameStateIteratorGenerator::end() const {
 }
 
 // ====== AI
-GameState AI::makeMoveLookahead(GameState game, Piece p1, Piece p2, Piece p3) {
-	Piece pieces[3] = { p1, p2, p3 };
-	std::sort(pieces, pieces + 3);
+GameState AI::makeMoveLookahead(GameState game, PieceSet piece_set) {
+	std::sort(piece_set.pieces, piece_set.pieces + 3);
 
 	uint64_t bestScore = 9999999999;
 	auto bestNext = GameState(BitBoard::full());
@@ -486,15 +495,15 @@ GameState AI::makeMoveLookahead(GameState game, Piece p1, Piece p2, Piece p3) {
 	// If we can clear with 2 pieces or fewer, then we must try permutations.
 	bool can_clear_with_2_pieces = false;
 	for (int i = 0; i < 3; ++i) {
-		for (const auto after_p1 : game.nextStates(pieces[i])) {
+		for (const auto after_p1 : game.nextStates(piece_set.pieces[i])) {
 			for (int j = 0; j < 3; ++j) {
 				if (i == j) {
 					continue;
 				}
-				for (const auto after_p2 : after_p1.nextStates(pieces[j])) {
+				for (const auto after_p2 : after_p1.nextStates(piece_set.pieces[j])) {
 					if (after_p2.getBitBoard().count() <
-						game.getBitBoard().count() + pieces[i].getBitBoard().count() +
-						pieces[j].getBitBoard().count()) {
+						game.getBitBoard().count() + piece_set.pieces[i].getBitBoard().count() +
+						piece_set.pieces[j].getBitBoard().count()) {
 						can_clear_with_2_pieces = true;
 						break;
 					}
@@ -509,14 +518,14 @@ GameState AI::makeMoveLookahead(GameState game, Piece p1, Piece p2, Piece p3) {
 	// Foreach permutation of the pieces.
 	bool is_first_permutation = true;
 	do {
-		for (const auto after_p1 : game.nextStates(pieces[0])) {
-			for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
-				for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
+		for (const auto after_p1 : game.nextStates(piece_set.pieces[0])) {
+			for (const auto after_p2 : after_p1.nextStates(piece_set.pieces[1])) {
+				for (const auto after_p3 : after_p2.nextStates(piece_set.pieces[2])) {
 					if (!is_first_permutation &&
 						after_p3.getBitBoard().count() == game.getBitBoard().count()
-						+ pieces[0].getBitBoard().count() +
-						pieces[1].getBitBoard().count() +
-						pieces[2].getBitBoard().count()
+						+ piece_set.pieces[0].getBitBoard().count() +
+						piece_set.pieces[1].getBitBoard().count() +
+						piece_set.pieces[2].getBitBoard().count()
 						) {
 						// No clears. This position was seen in a previous permutation.
 						continue;
@@ -551,21 +560,20 @@ GameState AI::makeMoveLookahead(GameState game, Piece p1, Piece p2, Piece p3) {
 			}
 		}
 		is_first_permutation = false;
-	} while (can_clear_with_2_pieces && std::next_permutation(pieces, pieces + 3));
+	} while (can_clear_with_2_pieces && std::next_permutation(piece_set.pieces, piece_set.pieces + 3));
 
 	return bestNext;
 }
 
-GameState AI::makeMoveSimple(GameState game, Piece p1, Piece p2, Piece p3) {
-	Piece pieces[3] = { p1, p2, p3 };
-	std::sort(pieces, pieces + 3);
+GameState AI::makeMoveSimple(GameState game, PieceSet piece_set) {
+	std::sort(piece_set.pieces, piece_set.pieces + 3);
 
 	uint64_t bestScore = 9999;
 	auto bestNext = GameState(BitBoard::full());
 	do {
-		for (const auto after_p1 : game.nextStates(pieces[0])) {
-			for (const auto after_p2 : after_p1.nextStates(pieces[1])) {
-				for (const auto after_p3 : after_p2.nextStates(pieces[2])) {
+		for (const auto after_p1 : game.nextStates(piece_set.pieces[0])) {
+			for (const auto after_p2 : after_p1.nextStates(piece_set.pieces[1])) {
+				for (const auto after_p3 : after_p2.nextStates(piece_set.pieces[2])) {
 					const auto score = after_p3.simpleEval();
 					if (score < bestScore) {
 						bestScore = score;
@@ -574,7 +582,7 @@ GameState AI::makeMoveSimple(GameState game, Piece p1, Piece p2, Piece p3) {
 				}
 			}
 		}
-	} while (std::next_permutation(pieces, pieces + 3));
+	} while (std::next_permutation(piece_set.pieces, piece_set.pieces + 3));
 
 	return bestNext;
 }

@@ -71,6 +71,13 @@ public:
 
 };
 
+class PieceSet {
+public:
+	PieceSet(Piece p1, Piece p2, Piece p3);
+	static PieceSet getRandom();
+	Piece pieces[3];
+};
+
 class PieceIterator {
 private:
 	uint8_t i;
@@ -137,8 +144,8 @@ public:
 class AI {
 public:
 	// Return the state with the lowest score after placing the 3 pieces.
-	static GameState makeMoveSimple(GameState state, Piece p1, Piece p2, Piece p3);
+	static GameState makeMoveSimple(GameState state, PieceSet piece_set);
 
 	// Similar to makeMoveSimple, but considers possible placements of the 4th piece.
-	static GameState makeMoveLookahead(GameState state, Piece p1, Piece p2, Piece p3);
+	static GameState makeMoveLookahead(GameState state, PieceSet piece_set);
 };

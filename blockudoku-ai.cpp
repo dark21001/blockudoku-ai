@@ -8,12 +8,11 @@
 
 using namespace std;
 
-void printPieceSet(Piece p1, Piece p2, Piece p3) {
-	Piece pieces[3] = { p1, p2, p3 };
+void printPieceSet(PieceSet piece_set) {
 	for (int i = 0; i < 5; ++i) {
 		for (int j = 0; j < 3; ++j) {
 			for (int k = 0; k < 6; k++) {
-				cout << (pieces[j].getBitBoard().at(i, k) ? '#' : ' ');
+				cout << (piece_set.pieces[j].getBitBoard().at(i, k) ? '#' : ' ');
 			}
 		}
 		cout << endl;
@@ -27,14 +26,11 @@ double simpleEvalFitnessTest(int numGames) {
 	for (int i = 0; i < numGames; ++i) {
 		auto game = GameState(BitBoard::empty());
 		int score = 0;
-		
+
 		do {
 			score += 1;
-			const auto p1 = Piece::getRandom();
-			const auto p2 = Piece::getRandom();
-			const auto p3 = Piece::getRandom();
-
-			game = AI::makeMoveSimple(game, p1, p2, p3);
+			const auto piece_set = PieceSet::getRandom();
+			game = AI::makeMoveSimple(game, piece_set);
 
 		} while (!game.isOver());
 		cout << (i+1) << '/' << numGames << ' ' << score << endl;
@@ -54,13 +50,11 @@ int main() {
 		cout << "===== TURN " << turns << endl;
 		cout << game.getBitBoard().str() << endl;
 
-		const auto p1 = Piece::getRandom();
-		const auto p2 = Piece::getRandom();
-		const auto p3 = Piece::getRandom();
-		printPieceSet(p1, p2, p3);
+		const auto piece_set = PieceSet::getRandom();
+		printPieceSet(piece_set);
 		cout << endl;
 
-		const auto next = AI::makeMoveLookahead(game, p1, p2, p3);
+		const auto next = AI::makeMoveLookahead(game, piece_set);
 		if (next.getBitBoard() == BitBoard::full()) {
 			break;
 		}
