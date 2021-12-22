@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "../engine.h"
 #include "boostassert.h"
-#include<iostream>
 
 void assertNumPlacements(
 	BitBoard board,
@@ -27,10 +26,10 @@ void testBitBoardBasics() {
 			BOOST_ASSERT(BitBoard::full() == ~BitBoard::empty());
 		}
 	}
-	
+
 	BOOST_ASSERT((BitBoard::row(5) | BitBoard::column(4)).count() == 17);
 	BitBoard acc_cubes = BitBoard::empty();
-	
+
 	for (int r = 0; r < 3; r++) {
 		for (int c = 0; c < 3; c++) {
 			BitBoard cube = BitBoard::cube(r, c);
@@ -39,13 +38,12 @@ void testBitBoardBasics() {
 			acc_cubes = (acc_cubes | cube);
 		}
 	}
-	
+
 	BOOST_ASSERT(acc_cubes.count() == 81);
 	BOOST_ASSERT((BitBoard::cube(1, 1) - BitBoard::row(4) - BitBoard::column(4)).count() == 4);
 
 	// Basic counting
 	BOOST_ASSERT(BitBoard(1, 3).count() == 3);
-	std::cout << BitBoard::full().count() << std::endl;
 	BOOST_ASSERT(BitBoard::full().count() == 9*9);
 	BOOST_ASSERT((BitBoard::full()-BitBoard::full()).count() == 0);
 	BOOST_ASSERT((BitBoard::empty() - BitBoard::full()).count() == 0);
@@ -107,7 +105,7 @@ void testBitBoardBasics() {
 	 #  ##   #         ##
 	###  #  ###       ##
 	 #  ##
-	
+
 	*/
 	BOOST_ASSERT(numPieces == 47);
 	const auto bottom_right_cube = BitBoard::cube(2, 2);
@@ -120,4 +118,3 @@ int main()
 	testBitBoardBasics();
 	return 0;
 }
-
