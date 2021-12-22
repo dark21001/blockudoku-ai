@@ -61,7 +61,7 @@ double simpleEvalFitnessTest(int numGames) {
 int main() {
 	srand((unsigned)time(NULL));
 
-	cout << "Fitness: " << simpleEvalFitnessTest(1000) << endl;
+	cout << "Fitness: " << simpleEvalFitnessTest(500) << endl;
 
 	return 0;
 

@@ -304,17 +304,23 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 }
 
 uint64_t GameState::simpleEvalImpl(BitBoard bb) {
+	const int OCCUPIED_SQUARE = 10;
+	const int ROW_OR_COLUMN = 10;
+	const int CUBE = 30;
+	const int SQUASHED_EMPTY = 10;
+	const int CORNERED_EMPTY = 10;
+
 	uint64_t result = 0;
 
 	// 1 point for each block on the board.
-	result += bb.count();
+	result += bb.count() * OCCUPIED_SQUARE;
 
 	// 1 point for each occupied column.
 	for (int i = 0; i < 9; i++) {
 		const auto col_bits_a = RIGHT_MOST_COLUMN_A >> i;
 		const auto col_bits_b = RIGHT_MOST_COLUMN_B >> i;
 		if ((bb.a & col_bits_a) | (bb.b & col_bits_b)) {
-			result += 1;
+			result += ROW_OR_COLUMN;
 		}
 	}
 
@@ -322,13 +328,13 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	for (int i = 0; i < 6; ++i) {
 		const auto row_bits_a = ROW_0 << (i * 9);
 		if (row_bits_a & bb.a) {
-			result += 1;
+			result += ROW_OR_COLUMN;
 		}
 	}
 	for (int i = 0; i < 3; ++i) {
 		const auto row_bits_b = ROW_0 << (i * 9);
 		if (row_bits_b & bb.b) {
-			result += 1;
+			result += ROW_OR_COLUMN;
 		}
 	}
 
@@ -337,10 +343,10 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 		for (int c = 0; c < 3; c++) {
 			const auto cube_bits = TOP_LEFT_CUBE << (c * 3 + 27 * r);
 			if ((bb.a & cube_bits)) {
-				result += 3;
+				result += CUBE;
 			}
 			if (r == 0 && (bb.b & cube_bits)) {
-				result += 3;
+				result += CUBE;
 			}
 		}
 	}
@@ -350,14 +356,14 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	// 1 point for each open space with no horizontally adjacent open space.
 	// #.#
 	const auto horizontal_squashed = (open - open.shiftRight() - open.shiftLeft());
-	result += horizontal_squashed.count();
+	result += horizontal_squashed.count() * SQUASHED_EMPTY;
 
 	// 1 point for each open space with no vertically adjacent open space.
 	// #
 	// .
 	// #
 	const auto verticle_squashed = (open - open.shiftUp() - open.shiftDown());
-	result += verticle_squashed.count();
+	result += verticle_squashed.count() * SQUASHED_EMPTY;
 
 	// 1 point for each open space that has 3 blocks adjacent to it.
 	const auto filled_right = bb.shiftLeft();
@@ -366,10 +372,10 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	const auto filled_down = bb.shiftUp();
 	const auto open_and_filled_right = open & filled_right;
 	const auto open_and_filled_left = open & filled_left;
-	result += (open_and_filled_right & filled_down).count();
-	result += (open_and_filled_right & filled_up).count();
-	result += (open_and_filled_left & filled_down).count();
-	result += (open_and_filled_left & filled_up).count();
+	result += (open_and_filled_right & filled_down).count() * CORNERED_EMPTY;
+	result += (open_and_filled_right & filled_up).count() * CORNERED_EMPTY;
+	result += (open_and_filled_left & filled_down).count() * CORNERED_EMPTY;
+	result += (open_and_filled_left & filled_up).count() * CORNERED_EMPTY;
 
 	return result;
 }
