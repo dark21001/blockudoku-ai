@@ -30,14 +30,7 @@ bool BitBoard::operator<(BitBoard other) const {
 }
 
 bool BitBoard::at(unsigned r, unsigned c) const {
-	assert(r < 9);
-	assert(c < 9);
-	if (r <= 5) {
-		return (1ULL << (r * 9 + c)) & a;
-	}
-	else {
-		return (1ULL << ((r - 6) * 9 + c)) & b;
-	}
+	return (BitBoard::row(r) & BitBoard::column(c) & (*this));
 }
 
 BitBoard BitBoard::operator|(const BitBoard other) const {
