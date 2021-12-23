@@ -503,15 +503,18 @@ GameState AI::makeMoveLookahead(GameState game, PieceSet piece_set) {
 	// If we can clear with 2 pieces or fewer, then we must try permutations.
 	bool can_clear_with_2_pieces = false;
 	for (int i = 0; i < 3; ++i) {
-		for (const auto after_p1 : game.nextStates(piece_set.pieces[i])) {
+		const auto p0 = piece_set.pieces[i];
+		for (const auto after_p0 : game.nextStates(p0)) {
 			for (int j = 0; j < 3; ++j) {
 				if (i == j) {
 					continue;
 				}
-				for (const auto after_p2 : after_p1.nextStates(piece_set.pieces[j])) {
-					if (after_p2.getBitBoard().count() <
-						game.getBitBoard().count() + piece_set.pieces[i].getBitBoard().count() +
-						piece_set.pieces[j].getBitBoard().count()) {
+				const auto p1 = piece_set.pieces[j];
+				const auto block_count_if_no_clear = game.getBitBoard().count() +
+					p0.getBitBoard().count() +
+					p1.getBitBoard().count();
+				for (const auto after_p1 : after_p0.nextStates(p1)) {
+					if (after_p1.getBitBoard().count() < block_count_if_no_clear) {
 						can_clear_with_2_pieces = true;
 						break;
 					}
@@ -526,43 +529,46 @@ GameState AI::makeMoveLookahead(GameState game, PieceSet piece_set) {
 	// Foreach permutation of the pieces.
 	bool is_first_permutation = true;
 	do {
-		for (const auto after_p1 : game.nextStates(piece_set.pieces[0])) {
-			for (const auto after_p2 : after_p1.nextStates(piece_set.pieces[1])) {
-				for (const auto after_p3 : after_p2.nextStates(piece_set.pieces[2])) {
+		const auto p0 = piece_set.pieces[0];
+		const auto p1 = piece_set.pieces[1];
+		const auto p2 = piece_set.pieces[2];
+		for (const auto after_p0 : game.nextStates(p0)) {
+			for (const auto after_p1 : after_p0.nextStates(p1)) {
+				for (const auto after_p2 : after_p1.nextStates(p2)) {
 					if (!is_first_permutation &&
-						after_p3.getBitBoard().count() == game.getBitBoard().count()
-						+ piece_set.pieces[0].getBitBoard().count() +
-						piece_set.pieces[1].getBitBoard().count() +
-						piece_set.pieces[2].getBitBoard().count()
+						after_p2.getBitBoard().count() == game.getBitBoard().count()
+						+ p0.getBitBoard().count() +
+						p1.getBitBoard().count() +
+						p2.getBitBoard().count()
 						) {
 						// No clears. This position was seen in a previous permutation.
 						continue;
 					}
 
-					uint64_t total_after_p3 = 0;
+					uint64_t total_after_p2 = 0;
 					bool is_1x1 = true;
-					for (const auto p4 : Piece::getAll()) {
+					for (const auto p3 : Piece::getAll()) {
 						if (is_1x1) {
 							// Be pessimistic and pretend we won't get a 1x1.
 							is_1x1 = false;
 							continue;
 						}
 
-						uint64_t best_after_p4 = 99999999;
-						for (const auto after_p4 : after_p3.nextStates(p4)) {
-							best_after_p4 = std::min(best_after_p4,
-								after_p4.simpleEval());
+						uint64_t best_after_p3 = 99999999;
+						for (const auto after_p3 : after_p2.nextStates(p3)) {
+							best_after_p3 = std::min(best_after_p3,
+								after_p3.simpleEval());
 						}
-						total_after_p3 += best_after_p4;
-						if (total_after_p3 > bestScore) {
+						total_after_p2 += best_after_p3;
+						if (total_after_p2 > bestScore) {
 							// after_p3 is worse than the existing candidate already.
 							break;
 						}
 					}
 
-					if (total_after_p3 < bestScore) {
-						bestScore = total_after_p3;
-						bestNext = after_p3;
+					if (total_after_p2 < bestScore) {
+						bestScore = total_after_p2;
+						bestNext = after_p2;
 					}
 				}
 			}
@@ -579,13 +585,16 @@ GameState AI::makeMoveSimple(GameState game, PieceSet piece_set) {
 	uint64_t bestScore = 9999;
 	auto bestNext = GameState(BitBoard::full());
 	do {
-		for (const auto after_p1 : game.nextStates(piece_set.pieces[0])) {
-			for (const auto after_p2 : after_p1.nextStates(piece_set.pieces[1])) {
-				for (const auto after_p3 : after_p2.nextStates(piece_set.pieces[2])) {
-					const auto score = after_p3.simpleEval();
+		const auto p0 = piece_set.pieces[0];
+		const auto p1 = piece_set.pieces[1];
+		const auto p2 = piece_set.pieces[2];
+		for (const auto after_p0 : game.nextStates(p0)) {
+			for (const auto after_p1 : after_p0.nextStates(p1)) {
+				for (const auto after_p2 : after_p1.nextStates(p2)) {
+					const auto score = after_p2.simpleEval();
 					if (score < bestScore) {
 						bestScore = score;
-						bestNext = after_p3;
+						bestNext = after_p2;
 					}
 				}
 			}

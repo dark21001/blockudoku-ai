@@ -61,9 +61,10 @@ double simpleEvalFitnessTest(int numGames) {
 int main() {
 	srand((unsigned)time(NULL));
 
+/*
 	cout << "Fitness: " << simpleEvalFitnessTest(500) << endl;
 
-	return 0;
+	return 0;*/
 
 	auto game = GameState(BitBoard::empty());
 	int turns = 0;
