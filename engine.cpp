@@ -312,10 +312,10 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 
 	uint64_t result = 0;
 
-	// 1 point for each block on the board.
+	// Occupied squares.
 	result += bb.count() * OCCUPIED_SQUARE;
 
-	// 1 point for each occupied column.
+	// Occupied columns.
 	for (int i = 0; i < 9; i++) {
 		const auto col_bits_a = RIGHT_MOST_COLUMN_A >> i;
 		const auto col_bits_b = RIGHT_MOST_COLUMN_B >> i;
@@ -324,7 +324,7 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 		}
 	}
 
-	// 1 point for each occupied row.
+	// Occupied rows.
 	for (int i = 0; i < 6; ++i) {
 		const auto row_bits_a = ROW_0 << (i * 9);
 		if (row_bits_a & bb.a) {
@@ -338,7 +338,7 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 		}
 	}
 
-	// 3 points for each occupied 3x3 section.
+	// Occupied cubes.
 	for (int r = 0; r < 2; r++) {
 		for (int c = 0; c < 3; c++) {
 			const auto cube_bits = TOP_LEFT_CUBE << (c * 3 + 27 * r);
@@ -358,6 +358,7 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	const auto blocked_up = open - open.shiftDown();
 	const auto blocked_down = open - open.shiftUp();
 
+	// Sandwiched squares.
 	const auto horizontal_squashed = (blocked_right & blocked_left);
 	result += horizontal_squashed.count() * SQUASHED_EMPTY;
 	result += (horizontal_squashed & (BitBoard::column(0) | BitBoard::column(8))).count() * 5;
