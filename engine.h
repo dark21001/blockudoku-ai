@@ -148,4 +148,8 @@ public:
 
 	// Similar to makeMoveSimple, but considers possible placements of the 4th piece.
 	static GameState makeMoveLookahead(GameState state, PieceSet piece_set);
+
+private:
+	static bool canClearWith2PiecesOrFewer(GameState state, PieceSet piece_set);
+
 };

@@ -500,31 +500,7 @@ GameState AI::makeMoveLookahead(GameState game, PieceSet piece_set) {
 	uint64_t bestScore = 9999999999;
 	auto bestNext = GameState(BitBoard::full());
 
-	// If we can clear with 2 pieces or fewer, then we must try permutations.
-	bool can_clear_with_2_pieces = false;
-	for (int i = 0; i < 3; ++i) {
-		const auto p0 = piece_set.pieces[i];
-		for (const auto after_p0 : game.nextStates(p0)) {
-			for (int j = 0; j < 3; ++j) {
-				if (i == j) {
-					continue;
-				}
-				const auto p1 = piece_set.pieces[j];
-				const auto block_count_if_no_clear = game.getBitBoard().count() +
-					p0.getBitBoard().count() +
-					p1.getBitBoard().count();
-				for (const auto after_p1 : after_p0.nextStates(p1)) {
-					if (after_p1.getBitBoard().count() < block_count_if_no_clear) {
-						can_clear_with_2_pieces = true;
-						break;
-					}
-				}
-			}
-		}
-		if (can_clear_with_2_pieces) {
-			break;
-		}
-	}
+	const auto can_clear_with_2_pieces = AI::canClearWith2PiecesOrFewer(game, piece_set);
 
 	// Foreach permutation of the pieces.
 	bool is_first_permutation = true;
@@ -582,15 +558,32 @@ GameState AI::makeMoveLookahead(GameState game, PieceSet piece_set) {
 GameState AI::makeMoveSimple(GameState game, PieceSet piece_set) {
 	std::sort(piece_set.pieces, piece_set.pieces + 3);
 
+	const auto can_clear_with_2_pieces = AI::canClearWith2PiecesOrFewer(game, piece_set);
+
 	uint64_t bestScore = 9999;
 	auto bestNext = GameState(BitBoard::full());
+
+	bool is_first_permutation = true;
 	do {
 		const auto p0 = piece_set.pieces[0];
 		const auto p1 = piece_set.pieces[1];
 		const auto p2 = piece_set.pieces[2];
 		for (const auto after_p0 : game.nextStates(p0)) {
 			for (const auto after_p1 : after_p0.nextStates(p1)) {
+				const auto after_p1_max_count = game.getBitBoard().count() +
+					p0.getBitBoard().count() +
+					p1.getBitBoard().count();
+				if (p1 < p0 && after_p1.getBitBoard().count() == after_p1_max_count) {
+					// Tried this permutation before.
+					continue;
+				}
 				for (const auto after_p2 : after_p1.nextStates(p2)) {
+					if (!is_first_permutation &&
+						after_p2.getBitBoard().count() == after_p1_max_count + p2.getBitBoard().count()
+						) {
+						// Tried this permutation before.
+						continue;
+					}
 					const auto score = after_p2.simpleEval();
 					if (score < bestScore) {
 						bestScore = score;
@@ -599,7 +592,33 @@ GameState AI::makeMoveSimple(GameState game, PieceSet piece_set) {
 				}
 			}
 		}
-	} while (std::next_permutation(piece_set.pieces, piece_set.pieces + 3));
+		is_first_permutation = false;
+	} while (can_clear_with_2_pieces &&
+		std::next_permutation(piece_set.pieces, piece_set.pieces + 3));
 
 	return bestNext;
+}
+
+bool AI::canClearWith2PiecesOrFewer(GameState game, PieceSet piece_set) {
+	// Determine if we need to check permutations.
+	for (int i = 0; i < 3; ++i) {
+		const auto p0 = piece_set.pieces[i];
+		for (const auto after_p0 : game.nextStates(p0)) {
+			for (int j = 0; j < 3; ++j) {
+				if (i == j) {
+					continue;
+				}
+				const auto p1 = piece_set.pieces[j];
+				const auto block_count_if_no_clear = game.getBitBoard().count() +
+					p0.getBitBoard().count() +
+					p1.getBitBoard().count();
+				for (const auto after_p1 : after_p0.nextStates(p1)) {
+					if (after_p1.getBitBoard().count() < block_count_if_no_clear) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
 }
