@@ -353,30 +353,31 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 
 	const auto open = ~bb;
 
-	// 1 point for each open space with no horizontally adjacent open space.
-	// #.#
-	const auto horizontal_squashed = (open - open.shiftRight() - open.shiftLeft());
+	const auto blocked_right = open - open.shiftLeft();
+	const auto blocked_left = open - open.shiftRight();
+	const auto blocked_up = open - open.shiftDown();
+	const auto blocked_down = open - open.shiftUp();
+
+	const auto horizontal_squashed = (blocked_right & blocked_left);
 	result += horizontal_squashed.count() * SQUASHED_EMPTY;
+	result += (horizontal_squashed & (BitBoard::column(0) | BitBoard::column(8))).count() * 5;
 
-	// 1 point for each open space with no vertically adjacent open space.
-	// #
-	// .
-	// #
-	const auto verticle_squashed = (open - open.shiftUp() - open.shiftDown());
+	const auto verticle_squashed = (blocked_up & blocked_down);
 	result += verticle_squashed.count() * SQUASHED_EMPTY;
+	result += (verticle_squashed & (BitBoard::row(0) | BitBoard::row(8))).count() * 5;
 
-	// 1 point for each open space that has 3 blocks adjacent to it.
-	const auto filled_right = bb.shiftLeft();
-	const auto filled_left = bb.shiftRight();
-	const auto filled_up = bb.shiftDown();
-	const auto filled_down = bb.shiftUp();
-	const auto open_and_filled_right = open & filled_right;
-	const auto open_and_filled_left = open & filled_left;
-	result += (open_and_filled_right & filled_down).count() * CORNERED_EMPTY;
-	result += (open_and_filled_right & filled_up).count() * CORNERED_EMPTY;
-	result += (open_and_filled_left & filled_down).count() * CORNERED_EMPTY;
-	result += (open_and_filled_left & filled_up).count() * CORNERED_EMPTY;
+	// Cornerish.
+	const auto blocked_up_left = blocked_up & blocked_left;
+	result += (blocked_up_left - (BitBoard::row(0) | BitBoard::column(0))).count() * CORNERED_EMPTY;
 
+	const auto blocked_up_right = blocked_up & blocked_right;
+	result += (blocked_up_right - (BitBoard::row(0) | BitBoard::column(8))).count() * CORNERED_EMPTY;
+
+	const auto blocked_down_left = blocked_down & blocked_left;
+	result += (blocked_down_left - (BitBoard::row(8) | BitBoard::column(0))).count() * CORNERED_EMPTY;
+
+	const auto blocked_down_right = blocked_down & blocked_right;
+	result += (blocked_down_right - (BitBoard::row(8) | BitBoard::column(8))).count() * CORNERED_EMPTY;
 	return result;
 }
 
