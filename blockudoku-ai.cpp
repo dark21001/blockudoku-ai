@@ -7,6 +7,7 @@
 #include <iostream>
 #include <atomic>
 #include <thread>
+#include <numeric>
 
 using namespace std;
 
@@ -55,13 +56,18 @@ double simpleEvalFitnessTest(int numGames) {
     });
 
 	sort(scores.begin(), scores.end());
-	return scores[numGames / 2];
+	double result = scores[numGames / 2];
+	cout << "p50: " << result << endl;
+	cout << "avg: " << (std::accumulate(scores.begin(), scores.end(), 0.0) / numGames) << endl;
+
+	return result;
 }
 
 int main() {
 	srand((unsigned)time(NULL));
+	simpleEvalFitnessTest(10);
 
-	cout << "Fitness: " << simpleEvalFitnessTest(2000) << endl;
+
 
 	return 0;
 

@@ -308,8 +308,7 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	const int CUBE = 30;
 	const int SQUASHED_EMPTY = 10;
 	const int CORNERED_EMPTY = 10;
-	const int ALTERNATING = 10;
-	const int SQUASHED_EMPTY_EDGE = 5; // Still need?
+	const int ALTERNATING = 15;
 
 	uint64_t result = 0;
 
@@ -339,11 +338,9 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	// Sandwiched squares.
 	const auto horizontal_squashed = (blocked_right & blocked_left);
 	result += horizontal_squashed.count() * SQUASHED_EMPTY;
-	result += (horizontal_squashed & (BitBoard::column(0) | BitBoard::column(8))).count() * SQUASHED_EMPTY_EDGE;
 
 	const auto verticle_squashed = (blocked_up & blocked_down);
 	result += verticle_squashed.count() * SQUASHED_EMPTY;
-	result += (verticle_squashed & (BitBoard::row(0) | BitBoard::row(8))).count() * SQUASHED_EMPTY_EDGE;
 
 	// Cornerish.
 	const auto blocked_up_left = blocked_up & blocked_left;
