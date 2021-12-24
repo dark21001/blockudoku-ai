@@ -305,38 +305,16 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 
 uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	const int OCCUPIED_SQUARE = 10;
-	const int ROW_OR_COLUMN = 10;
 	const int CUBE = 30;
 	const int SQUASHED_EMPTY = 10;
 	const int CORNERED_EMPTY = 10;
+	const int ALTERNATING = 7;
+	const int SQUASHED_EMPTY_EDGE = 5;
 
 	uint64_t result = 0;
 
 	// Occupied squares.
 	result += bb.count() * OCCUPIED_SQUARE;
-
-	// Occupied columns.
-	for (int i = 0; i < 9; i++) {
-		const auto col_bits_a = RIGHT_MOST_COLUMN_A >> i;
-		const auto col_bits_b = RIGHT_MOST_COLUMN_B >> i;
-		if ((bb.a & col_bits_a) | (bb.b & col_bits_b)) {
-			result += ROW_OR_COLUMN;
-		}
-	}
-
-	// Occupied rows.
-	for (int i = 0; i < 6; ++i) {
-		const auto row_bits_a = ROW_0 << (i * 9);
-		if (row_bits_a & bb.a) {
-			result += ROW_OR_COLUMN;
-		}
-	}
-	for (int i = 0; i < 3; ++i) {
-		const auto row_bits_b = ROW_0 << (i * 9);
-		if (row_bits_b & bb.b) {
-			result += ROW_OR_COLUMN;
-		}
-	}
 
 	// Occupied cubes.
 	for (int r = 0; r < 2; r++) {
@@ -361,11 +339,11 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	// Sandwiched squares.
 	const auto horizontal_squashed = (blocked_right & blocked_left);
 	result += horizontal_squashed.count() * SQUASHED_EMPTY;
-	result += (horizontal_squashed & (BitBoard::column(0) | BitBoard::column(8))).count() * 5;
+	result += (horizontal_squashed & (BitBoard::column(0) | BitBoard::column(8))).count() * SQUASHED_EMPTY_EDGE;
 
 	const auto verticle_squashed = (blocked_up & blocked_down);
 	result += verticle_squashed.count() * SQUASHED_EMPTY;
-	result += (verticle_squashed & (BitBoard::row(0) | BitBoard::row(8))).count() * 5;
+	result += (verticle_squashed & (BitBoard::row(0) | BitBoard::row(8))).count() * SQUASHED_EMPTY_EDGE;
 
 	// Cornerish.
 	const auto blocked_up_left = blocked_up & blocked_left;
@@ -379,6 +357,9 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 
 	const auto blocked_down_right = blocked_down & blocked_right;
 	result += (blocked_down_right - (BitBoard::row(8) | BitBoard::column(8))).count() * CORNERED_EMPTY;
+
+	result += blocked_up.count() * ALTERNATING;
+	result += blocked_left.count() * ALTERNATING;
 	return result;
 }
 
