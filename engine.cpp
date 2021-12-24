@@ -304,12 +304,12 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 }
 
 uint64_t GameState::simpleEvalImpl(BitBoard bb) {
-	const int OCCUPIED_SQUARE = 10;
+	const int OCCUPIED_SQUARE = 10; // FIXED DO NOT CHANGE
 	const int CUBE = 30;
 	const int SQUASHED_EMPTY = 10;
 	const int CORNERED_EMPTY = 10;
-	const int ALTERNATING = 7;
-	const int SQUASHED_EMPTY_EDGE = 5;
+	const int ALTERNATING = 10;
+	const int SQUASHED_EMPTY_EDGE = 5; // Still need?
 
 	uint64_t result = 0;
 
