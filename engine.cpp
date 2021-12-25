@@ -129,6 +129,12 @@ BitBoard BitBoard::leastSignificantBit() const {
 	return BitBoard(0, b &- b);
 }
 
+BitBoard BitBoard::getCross() const {
+	assert(count() == 1);
+	const int i = a ? __builtin_ctzll(a) : 54 + __builtin_ctzll(b);
+	return BitBoard::row(i / 9) | BitBoard::column(i % 9);
+}
+
 int BitBoard::count() const {
 	return (int)std::bitset<64>(a).count() + (int)std::bitset<64>(b).count();
 }

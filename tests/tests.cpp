@@ -119,6 +119,7 @@ void testBitBoardBasics() {
 			BOOST_ASSERT(lsb.count() == 1);
 			acc = acc | lsb;
 			b = b - lsb;
+			BOOST_ASSERT(lsb.getCross().count() == 17);
 		}
 		BOOST_ASSERT(acc == BitBoard::full());
 	}
