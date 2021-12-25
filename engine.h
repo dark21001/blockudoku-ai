@@ -47,6 +47,8 @@ public:
 	BitBoard shiftUp() const;
 	BitBoard shiftDown() const;
 
+	BitBoard leastSignificantBit() const;
+
 	// Swap row 0 with 8, 1 with 7, 2 with 6, 3 with 5.
 	BitBoard topDownFlip() const;
 

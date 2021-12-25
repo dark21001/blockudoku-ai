@@ -26,12 +26,17 @@ int getNumTurnsSample() {
 	auto game = GameState(BitBoard::empty());
 	int score = 0;
 
-	do {
+	while(true) {
 		score += 1;
 		const auto piece_set = PieceSet::getRandom();
-		game = AI::makeMoveSimple(game, piece_set);
-
-	} while (!game.isOver());
+		const auto next = AI::makeMoveSimple(game, piece_set);
+		if (next.isOver()){
+			cout << game.getBitBoard().str() << endl;
+			printPieceSet(piece_set);
+			break;
+		}
+		game = next;
+	}
 	return score;
 }
 
@@ -65,7 +70,7 @@ double simpleEvalFitnessTest(int numGames) {
 
 int main() {
 	srand((unsigned)time(NULL));
-	simpleEvalFitnessTest(10);
+	simpleEvalFitnessTest(1000);
 
 
 

@@ -122,6 +122,13 @@ BitBoard BitBoard::shiftUp() const {
 	return BitBoard((a >> 9) | ((b & 0x01FFULL) << 45), b >> 9);
 }
 
+BitBoard BitBoard::leastSignificantBit() const {
+	if (a) {
+		return BitBoard(a &- a, 0);
+	}
+	return BitBoard(0, b &- b);
+}
+
 int BitBoard::count() const {
 	return (int)std::bitset<64>(a).count() + (int)std::bitset<64>(b).count();
 }
