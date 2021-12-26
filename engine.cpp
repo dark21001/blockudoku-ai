@@ -584,6 +584,14 @@ GameState AI::makeMoveLookahead(GameState game, PieceSet piece_set) {
 		const auto p2 = piece_set.pieces[2];
 		for (const auto after_p0 : game.nextStates(p0)) {
 			for (const auto after_p1 : after_p0.nextStates(p1)) {
+				const auto after_p1_max_count = game.getBitBoard().count() +
+					p0.getBitBoard().count() +
+					p1.getBitBoard().count();
+				if (p1 < p0 && after_p1.getBitBoard().count() == after_p1_max_count) {
+					// Tried this permutation before.
+					continue;
+				}
+
 				for (const auto after_p2 : after_p1.nextStates(p2)) {
 					if (!is_first_permutation &&
 						after_p2.getBitBoard().count() == game.getBitBoard().count()
