@@ -322,6 +322,7 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	const int SQUASHED_EMPTY = 10;
 	const int CORNERED_EMPTY = 10;
 	const int ALTERNATING = 15;
+	const int DEADLY_PIECE = 40;
 
 	uint64_t result = 0;
 
@@ -343,33 +344,115 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 
 	const auto open = ~bb;
 
-	const auto blocked_right = open - open.shiftLeft();
-	const auto blocked_left = open - open.shiftRight();
-	const auto blocked_up = open - open.shiftDown();
-	const auto blocked_down = open - open.shiftUp();
+	{
+		const auto blocked_right = open - open.shiftLeft();
+		const auto blocked_left = open - open.shiftRight();
+		const auto blocked_up = open - open.shiftDown();
+		const auto blocked_down = open - open.shiftUp();
 
-	// Sandwiched squares.
-	const auto horizontal_squashed = (blocked_right & blocked_left);
-	result += horizontal_squashed.count() * SQUASHED_EMPTY;
+		// Sandwiched squares.
+		const auto horizontal_squashed = (blocked_right & blocked_left);
+		result += horizontal_squashed.count() * SQUASHED_EMPTY;
 
-	const auto verticle_squashed = (blocked_up & blocked_down);
-	result += verticle_squashed.count() * SQUASHED_EMPTY;
+		const auto verticle_squashed = (blocked_up & blocked_down);
+		result += verticle_squashed.count() * SQUASHED_EMPTY;
 
-	// Cornerish.
-	const auto blocked_up_left = blocked_up & blocked_left;
-	result += (blocked_up_left - (BitBoard::row(0) | BitBoard::column(0))).count() * CORNERED_EMPTY;
+		// Cornerish.
+		const auto blocked_up_left = blocked_up & blocked_left;
+		result += (blocked_up_left - (BitBoard::row(0) | BitBoard::column(0))).count() * CORNERED_EMPTY;
 
-	const auto blocked_up_right = blocked_up & blocked_right;
-	result += (blocked_up_right - (BitBoard::row(0) | BitBoard::column(8))).count() * CORNERED_EMPTY;
+		const auto blocked_up_right = blocked_up & blocked_right;
+		result += (blocked_up_right - (BitBoard::row(0) | BitBoard::column(8))).count() * CORNERED_EMPTY;
 
-	const auto blocked_down_left = blocked_down & blocked_left;
-	result += (blocked_down_left - (BitBoard::row(8) | BitBoard::column(0))).count() * CORNERED_EMPTY;
+		const auto blocked_down_left = blocked_down & blocked_left;
+		result += (blocked_down_left - (BitBoard::row(8) | BitBoard::column(0))).count() * CORNERED_EMPTY;
 
-	const auto blocked_down_right = blocked_down & blocked_right;
-	result += (blocked_down_right - (BitBoard::row(8) | BitBoard::column(8))).count() * CORNERED_EMPTY;
+		const auto blocked_down_right = blocked_down & blocked_right;
+		result += (blocked_down_right - (BitBoard::row(8) | BitBoard::column(8))).count() * CORNERED_EMPTY;
 
-	result += blocked_up.count() * ALTERNATING;
-	result += blocked_left.count() * ALTERNATING;
+		result += blocked_up.count() * ALTERNATING;
+		result += blocked_left.count() * ALTERNATING;
+	}
+
+	{
+		// Deadly pieces.
+		const auto open_left =  open.shiftRight();
+		const auto open_2_left = open_left.shiftRight();
+		const auto open_right = open.shiftLeft();
+		const auto open_2_right = open_right.shiftLeft();
+		const auto open_up = open.shiftDown();
+		const auto open_2_up = open_up.shiftDown();
+		const auto open_down = open.shiftUp();
+		const auto open_2_down = open_down.shiftUp();
+
+		const auto open_up_left = open_up.shiftRight();
+		const auto open_down_left = open_down.shiftRight();
+		const auto open_up_right = open_up.shiftLeft();
+		const auto open_down_right = open_down.shiftLeft();
+
+		if (!(open & open_left & open_2_left & open_right & open_2_right)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_up & open_2_up & open_down & open_2_down)) {
+			result += DEADLY_PIECE;
+		}
+
+		// L
+		if (!(open & open_up & open_2_up & open_right & open_2_right)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_up & open_2_up & open_left & open_2_left)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_down & open_2_down & open_right & open_2_right)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_down & open_2_down & open_left & open_2_left)) {
+			result += DEADLY_PIECE;
+		}
+
+		// T
+		if (!(open & open_left & open_right & open_down & open_2_down)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_left & open_right & open_up & open_2_up)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_up & open_down & open_left & open_2_left)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_up & open_down & open_right & open_2_right)) {
+			result += DEADLY_PIECE;
+		}
+
+		// +
+		if (!(open & open_left & open_right & open_up & open_down)) {
+			result += DEADLY_PIECE;
+		}
+
+		// 3 Stair
+		if (!(open & open_down_left & open_up_right)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_up_left & open_down_right)) {
+			result += DEADLY_PIECE;
+		}
+
+		// C
+		if (!(open & open_up & open_down & open_up_right & open_down_right)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_up & open_down & open_up_left & open_down_left)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_left & open_right & open_up_left & open_up_right)) {
+			result += DEADLY_PIECE;
+		}
+		if (!(open & open_left & open_right & open_down_left & open_down_right)) {
+			result += DEADLY_PIECE;
+		}
+	}
+
 	return result;
 }
 
