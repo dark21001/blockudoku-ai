@@ -70,11 +70,6 @@ double simpleEvalFitnessTest(int numGames) {
 
 int main() {
 	srand((unsigned)time(NULL));
-	simpleEvalFitnessTest(1000);
-
-
-
-	return 0;
 
 	auto game = GameState(BitBoard::empty());
 	int turns = 0;
