@@ -323,6 +323,7 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 	const int CORNERED_EMPTY = 10;
 	const int ALTERNATING = 15;
 	const int DEADLY_PIECE = 40;
+	const auto THREE_BAR = 5;
 
 	uint64_t result = 0;
 
@@ -389,6 +390,18 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 		const auto open_down_left = open_down.shiftRight();
 		const auto open_up_right = open_up.shiftLeft();
 		const auto open_down_right = open_down.shiftLeft();
+
+
+		auto fillable_by_horizontal_3_bar =
+		(open & open_left & open_right) | (open & open_left & open_2_left) |
+		(open & open_right & open_2_right);
+		result += (open &~ fillable_by_horizontal_3_bar).count() *THREE_BAR;
+
+		auto fillable_by_verticle_3_bar = (open & open_up & open_down) |
+		(open & open_up & open_2_up) | (open & open_down & open_2_down);
+		result += (open &~fillable_by_verticle_3_bar).count() * THREE_BAR;
+		// subtract bb??
+
 
 		if (!(open & open_left & open_2_left & open_right & open_2_right)) {
 			result += DEADLY_PIECE;
