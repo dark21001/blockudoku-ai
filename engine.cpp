@@ -400,8 +400,6 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 		auto fillable_by_verticle_3_bar = (open & open_up & open_down) |
 		(open & open_up & open_2_up) | (open & open_down & open_2_down);
 		result += (open &~fillable_by_verticle_3_bar).count() * THREE_BAR;
-		// subtract bb??
-
 
 		if (!(open & open_left & open_2_left & open_right & open_2_right)) {
 			result += DEADLY_PIECE;
