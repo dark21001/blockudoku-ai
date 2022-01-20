@@ -316,29 +316,21 @@ NextGameStateIteratorGenerator GameState::nextStates(Piece piece) const {
 	return NextGameStateIteratorGenerator(*this, piece);
 }
 
-uint64_t GameState::simpleEvalImpl(BitBoard bb) {
-	const int OCCUPIED_SQUARE = 10; // FIXED DO NOT CHANGE
-	const int CUBE = 30;
-	const int SQUASHED_EMPTY = 10;
-	const int CORNERED_EMPTY = 10;
-	const int ALTERNATING = 15;
-	const int DEADLY_PIECE = 40;
-	const auto THREE_BAR = 5;
-
+uint64_t GameState::simpleEvalImpl(EvalWeights weights, BitBoard bb) {
 	uint64_t result = 0;
 
 	// Occupied squares.
-	result += bb.count() * OCCUPIED_SQUARE;
+	result += bb.count() * weights.getOccupiedSquare();
 
 	// Occupied cubes.
 	for (int r = 0; r < 2; r++) {
 		for (int c = 0; c < 3; c++) {
 			const auto cube_bits = TOP_LEFT_CUBE << (c * 3 + 27 * r);
 			if ((bb.a & cube_bits)) {
-				result += CUBE;
+				result += weights.getOccupiedCube();
 			}
 			if (r == 0 && (bb.b & cube_bits)) {
-				result += CUBE;
+				result += weights.getOccupiedCube();
 			}
 		}
 	}
@@ -353,26 +345,26 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 
 		// Sandwiched squares.
 		const auto horizontal_squashed = (blocked_right & blocked_left);
-		result += horizontal_squashed.count() * SQUASHED_EMPTY;
+		result += horizontal_squashed.count() * weights.getSquashedEmpty();
 
 		const auto verticle_squashed = (blocked_up & blocked_down);
-		result += verticle_squashed.count() * SQUASHED_EMPTY;
+		result += verticle_squashed.count() * weights.getSquashedEmpty();
 
 		// Cornerish.
 		const auto blocked_up_left = blocked_up & blocked_left;
-		result += (blocked_up_left - (BitBoard::row(0) | BitBoard::column(0))).count() * CORNERED_EMPTY;
+		result += (blocked_up_left - (BitBoard::row(0) | BitBoard::column(0))).count() * weights.getCorneredEmpty();
 
 		const auto blocked_up_right = blocked_up & blocked_right;
-		result += (blocked_up_right - (BitBoard::row(0) | BitBoard::column(8))).count() * CORNERED_EMPTY;
+		result += (blocked_up_right - (BitBoard::row(0) | BitBoard::column(8))).count() * weights.getCorneredEmpty();
 
 		const auto blocked_down_left = blocked_down & blocked_left;
-		result += (blocked_down_left - (BitBoard::row(8) | BitBoard::column(0))).count() * CORNERED_EMPTY;
+		result += (blocked_down_left - (BitBoard::row(8) | BitBoard::column(0))).count() * weights.getCorneredEmpty();
 
 		const auto blocked_down_right = blocked_down & blocked_right;
-		result += (blocked_down_right - (BitBoard::row(8) | BitBoard::column(8))).count() * CORNERED_EMPTY;
+		result += (blocked_down_right - (BitBoard::row(8) | BitBoard::column(8))).count() * weights.getCorneredEmpty();
 
-		result += blocked_up.count() * ALTERNATING;
-		result += blocked_left.count() * ALTERNATING;
+		result += blocked_up.count() * weights.getPerimeter();
+		result += blocked_left.count() * weights.getPerimeter();
 	}
 
 	{
@@ -395,83 +387,83 @@ uint64_t GameState::simpleEvalImpl(BitBoard bb) {
 		auto fillable_by_horizontal_3_bar =
 		(open & open_left & open_right) | (open & open_left & open_2_left) |
 		(open & open_right & open_2_right);
-		result += (open &~ fillable_by_horizontal_3_bar).count() *THREE_BAR;
+		result += (open &~ fillable_by_horizontal_3_bar).count() * weights.get3Bar();
 
 		auto fillable_by_verticle_3_bar = (open & open_up & open_down) |
 		(open & open_up & open_2_up) | (open & open_down & open_2_down);
-		result += (open &~fillable_by_verticle_3_bar).count() * THREE_BAR;
+		result += (open &~fillable_by_verticle_3_bar).count() * weights.get3Bar();
 
 		if (!(open & open_left & open_2_left & open_right & open_2_right)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_up & open_2_up & open_down & open_2_down)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 
 		// L
 		if (!(open & open_up & open_2_up & open_right & open_2_right)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_up & open_2_up & open_left & open_2_left)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_down & open_2_down & open_right & open_2_right)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_down & open_2_down & open_left & open_2_left)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 
 		// T
 		if (!(open & open_left & open_right & open_down & open_2_down)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_left & open_right & open_up & open_2_up)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_up & open_down & open_left & open_2_left)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_up & open_down & open_right & open_2_right)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 
 		// +
 		if (!(open & open_left & open_right & open_up & open_down)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 
 		// 3 Stair
 		if (!(open & open_down_left & open_up_right)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_up_left & open_down_right)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 
 		// C
 		if (!(open & open_up & open_down & open_up_right & open_down_right)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_up & open_down & open_up_left & open_down_left)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_left & open_right & open_up_left & open_up_right)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 		if (!(open & open_left & open_right & open_down_left & open_down_right)) {
-			result += DEADLY_PIECE;
+			result += weights.getDeadlyPiece();
 		}
 	}
 
 	return result;
 }
 
-uint64_t GameState::simpleEval() const {
-	const auto result = simpleEvalImpl(bb);
+uint64_t GameState::simpleEval(EvalWeights weights) const {
+	const auto result = simpleEvalImpl(weights, bb);
 
 	assert(bb == bb.topDownFlip().topDownFlip());
-	assert(result == simpleEvalImpl(bb.topDownFlip()));
+	assert(result == simpleEvalImpl(weights, bb.topDownFlip()));
 
 	return result;
 }
@@ -578,8 +570,52 @@ NextGameStateIterator NextGameStateIteratorGenerator::end() const {
 	return NextGameStateIterator(state, Piece(BitBoard::empty()));
 }
 
+// ===== Eval Weights
+/*
+	const int OCCUPIED_SQUARE = 10; // FIXED DO NOT CHANGE
+	const int CUBE = 30;
+	const int SQUASHED_EMPTY = 10;
+	const int CORNERED_EMPTY = 10;
+	const int ALTERNATING = 15;
+	const int DEADLY_PIECE = 40;
+	const auto THREE_BAR = 5;
+*/
+EvalWeights::EvalWeights() {}
+EvalWeights EvalWeights::getDefault() {
+	EvalWeights r;
+	r.weights[0] = 30; // CUBE;
+	r.weights[1] = 10; // SQUASHED_EMPTY;
+	r.weights[2] = 10; // CORNERED_EMPTY;
+	r.weights[3] = 15; // ALTERNATING;
+	r.weights[4] = 40; // DEADLY_PIECE;
+	r.weights[5] = 5; // THREE_BAR.
+	return r;
+}
+int EvalWeights::getOccupiedSquare() const {
+	return 10;
+}
+int EvalWeights::getOccupiedCube() const {
+	return weights[0];
+}
+int EvalWeights::getSquashedEmpty() const {
+	return weights[1];
+}
+int EvalWeights::getCorneredEmpty() const {
+	return weights[2];
+}
+int EvalWeights::getPerimeter() const {
+	return weights[3];
+}
+int EvalWeights::getDeadlyPiece() const {
+	return weights[4];
+}
+int EvalWeights::get3Bar() const {
+	return weights[5];
+}
+
+
 // ====== AI
-GameState AI::makeMoveLookahead(GameState game, PieceSet piece_set) {
+GameState AI::makeMoveLookahead(EvalWeights weights, GameState game, PieceSet piece_set) {
 	std::sort(piece_set.pieces, piece_set.pieces + 3);
 
 	uint64_t bestScore = 9999999999;
@@ -626,7 +662,7 @@ GameState AI::makeMoveLookahead(GameState game, PieceSet piece_set) {
 						uint64_t best_after_p3 = 99999999;
 						for (const auto after_p3 : after_p2.nextStates(p3)) {
 							best_after_p3 = std::min(best_after_p3,
-								after_p3.simpleEval());
+								after_p3.simpleEval(weights));
 						}
 						total_after_p2 += best_after_p3;
 						if (total_after_p2 > bestScore) {
@@ -648,7 +684,7 @@ GameState AI::makeMoveLookahead(GameState game, PieceSet piece_set) {
 	return bestNext;
 }
 
-GameState AI::makeMoveSimple(GameState game, PieceSet piece_set) {
+GameState AI::makeMoveSimple(const EvalWeights weights, GameState game, PieceSet piece_set) {
 	std::sort(piece_set.pieces, piece_set.pieces + 3);
 
 	const auto can_clear_with_2_pieces = AI::canClearWith2PiecesOrFewer(game, piece_set);
@@ -677,7 +713,7 @@ GameState AI::makeMoveSimple(GameState game, PieceSet piece_set) {
 						// Tried this permutation before.
 						continue;
 					}
-					const auto score = after_p2.simpleEval();
+					const auto score = after_p2.simpleEval(weights);
 					if (score < bestScore) {
 						bestScore = score;
 						bestNext = after_p2;

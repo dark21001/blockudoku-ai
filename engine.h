@@ -105,16 +105,34 @@ public:
 };
 
 
+class EvalWeights {
+private:
+	EvalWeights();
+
+	int weights[6] = {0};
+public:
+	int getOccupiedSquare() const;
+	int getOccupiedCube() const;
+	int getSquashedEmpty() const;
+	int getCorneredEmpty() const;
+	int getPerimeter() const;
+	int getDeadlyPiece() const;
+	int get3Bar() const;
+
+	static EvalWeights getDefault();
+};
+
+
 class NextGameStateIteratorGenerator;
 class GameState {
 private:
 	BitBoard bb;
-	static uint64_t simpleEvalImpl(BitBoard bb);
+	static uint64_t simpleEvalImpl(EvalWeights weights, BitBoard bb);
 public:
 	explicit GameState(BitBoard bb);
 	BitBoard getBitBoard() const;
 	NextGameStateIteratorGenerator nextStates(Piece piece) const;
-	uint64_t simpleEval() const;
+	uint64_t simpleEval(EvalWeights weights) const;
 	bool isOver() const;
 };
 
@@ -145,14 +163,13 @@ public:
 
 
 };
-
 class AI {
 public:
 	// Return the state with the lowest score after placing the 3 pieces.
-	static GameState makeMoveSimple(GameState state, PieceSet piece_set);
+	static GameState makeMoveSimple(EvalWeights weights, GameState state, PieceSet piece_set);
 
 	// Similar to makeMoveSimple, but considers possible placements of the 4th piece.
-	static GameState makeMoveLookahead(GameState state, PieceSet piece_set);
+	static GameState makeMoveLookahead(EvalWeights weights, GameState state, PieceSet piece_set);
 
 private:
 	static bool canClearWith2PiecesOrFewer(GameState state, PieceSet piece_set);

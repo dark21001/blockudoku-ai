@@ -31,7 +31,7 @@ int main() {
 		printPieceSet(piece_set);
 		cout << endl;
 
-		const auto next = AI::makeMoveLookahead(game, piece_set);
+		const auto next = AI::makeMoveLookahead(EvalWeights::getDefault(), game, piece_set);
 		if (next.getBitBoard() == BitBoard::full()) {
 			break;
 		}

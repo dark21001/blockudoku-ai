@@ -12,14 +12,14 @@
 
 using namespace std;
 
-int getNumTurnsSample() {
+int getNumTurnsSample(EvalWeights weights) {
 	auto game = GameState(BitBoard::empty());
 	int score = 0;
 
 	while(true) {
 		score += 1;
 		const auto piece_set = PieceSet::getRandom();
-		const auto next = AI::makeMoveSimple(game, piece_set);
+		const auto next = AI::makeMoveSimple(weights, game, piece_set);
 		if (next.isOver()){
 			break;
 		}
@@ -29,7 +29,7 @@ int getNumTurnsSample() {
 }
 
 // Call this to test changes to the evaluation function.
-double simpleEvalFitnessTest(int numGames) {
+double simpleEvalFitnessTest(EvalWeights weights, int numGames) {
 	atomic<int> games_done(0);
 	vector<double> scores;
 	std::vector<std::thread> workers;
@@ -37,7 +37,7 @@ double simpleEvalFitnessTest(int numGames) {
         workers.push_back(std::thread([&]()
         {
 			while (games_done++ < numGames){
-				const auto score = getNumTurnsSample();
+				const auto score = getNumTurnsSample(weights);
 				scores.push_back(score);
 				cout << scores.size() << '/' << numGames << ' ' << score << endl;
 			}
@@ -59,7 +59,7 @@ double simpleEvalFitnessTest(int numGames) {
 int main(int argc, char *argv[]) {
 	srand((unsigned)time(NULL));
     const int num_iterations = std::atoi(argv[1]);
-    simpleEvalFitnessTest(num_iterations);
+    simpleEvalFitnessTest(EvalWeights::getDefault(), num_iterations);
 
 	return 0;
 }
