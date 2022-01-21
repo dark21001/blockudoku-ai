@@ -3,6 +3,7 @@
 #include <bitset>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 namespace {
 	const uint64_t ROW_0 = 0x1FFULL;
@@ -612,6 +613,23 @@ int EvalWeights::getDeadlyPiece() const {
 int EvalWeights::get3Bar() const {
 	return weights[5];
 }
+std::string EvalWeights::toString() const {
+	std::string res;
+	for (int i=0; i<NUM_WEIGHTS;i++) {
+		res += std::to_string(weights[i]) + " ";
+	}
+	return res;
+}
+EvalWeights EvalWeights::fromString(std::string str) {
+	std::stringstream ss;
+	ss << str;
+	EvalWeights result;
+	for (int i=0;i<NUM_WEIGHTS;++i) {
+		ss >> result.weights[i];
+	}
+	return result;
+}
+
 
 
 // ====== AI

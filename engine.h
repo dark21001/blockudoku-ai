@@ -107,9 +107,10 @@ public:
 
 class EvalWeights {
 private:
+	const static int NUM_WEIGHTS = 6;
 	EvalWeights();
 
-	int weights[6] = {0};
+	int weights[NUM_WEIGHTS] = {0};
 public:
 	int getOccupiedSquare() const;
 	int getOccupiedCube() const;
@@ -120,6 +121,8 @@ public:
 	int get3Bar() const;
 
 	static EvalWeights getDefault();
+	std::string toString() const;
+	static EvalWeights fromString(std::string str);
 };
 
 

@@ -125,8 +125,14 @@ void testBitBoardBasics() {
 	}
 }
 
+void testWeights() {
+	BOOST_ASSERT(EvalWeights::getDefault().toString() ==
+	EvalWeights::fromString(EvalWeights::getDefault().toString()).toString());
+}
+
 int main()
 {
 	testBitBoardBasics();
+	testWeights();
 	return 0;
 }
