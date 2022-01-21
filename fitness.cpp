@@ -10,8 +10,6 @@
 #include <numeric>
 #include <cstdlib>
 
-using namespace std;
-
 int getNumTurnsSample(EvalWeights weights) {
 	auto game = GameState(BitBoard::empty());
 	int score = 0;
@@ -30,8 +28,8 @@ int getNumTurnsSample(EvalWeights weights) {
 
 // Call this to test changes to the evaluation function.
 double simpleEvalFitnessTest(EvalWeights weights, int numGames) {
-	atomic<int> games_done(0);
-	vector<double> scores;
+	std::atomic<int> games_done(0);
+	std::vector<double> scores;
 	std::vector<std::thread> workers;
     for (int i = 0; i < std::thread::hardware_concurrency(); i++) {
         workers.push_back(std::thread([&]()
@@ -39,7 +37,7 @@ double simpleEvalFitnessTest(EvalWeights weights, int numGames) {
 			while (games_done++ < numGames){
 				const auto score = getNumTurnsSample(weights);
 				scores.push_back(score);
-				cout << scores.size() << '/' << numGames << ' ' << score << endl;
+				std::cout << scores.size() << '/' << numGames << ' ' << score << std::endl;
 			}
         }));
     }
@@ -48,10 +46,10 @@ double simpleEvalFitnessTest(EvalWeights weights, int numGames) {
         t.join();
     });
 
-	sort(scores.begin(), scores.end());
+	std::sort(scores.begin(), scores.end());
 	double result = scores[numGames / 2];
-	cout << "p50: " << result << endl;
-	cout << "avg: " << (std::accumulate(scores.begin(), scores.end(), 0.0) / numGames) << endl;
+	std::cout << "p50: " << result << std::endl;
+	std::cout << "avg: " << (std::accumulate(scores.begin(), scores.end(), 0.0) / numGames) << std::endl;
 
 	return result;
 }
