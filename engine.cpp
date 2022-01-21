@@ -636,6 +636,20 @@ EvalWeights EvalWeights::getRandom() {
 	}
 	return r;
 }
+EvalWeights EvalWeights::getMutation() const {
+	auto result = *this;
+	for (int i=0;i<NUM_WEIGHTS;++i) {
+		result.weights[i] = std::min(std::max(result.weights[i] + (rand() % 3) - 1, 0), 100);
+	}
+	return result;
+}
+EvalWeights EvalWeights::mate(EvalWeights other) const {
+	EvalWeights result;
+	for (int i=0;i<NUM_WEIGHTS;++i) {
+		result.weights[i] = rand() % 2 ? (*this).weights[i] : other.weights[i];
+	}
+	return result.getMutation();
+}
 
 
 

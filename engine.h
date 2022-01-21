@@ -111,6 +111,7 @@ private:
 	EvalWeights();
 
 	int weights[NUM_WEIGHTS] = {0};
+	EvalWeights getMutation() const;
 public:
 	int getOccupiedSquare() const;
 	int getOccupiedCube() const;
@@ -120,10 +121,13 @@ public:
 	int getDeadlyPiece() const;
 	int get3Bar() const;
 
+
 	static EvalWeights getDefault();
 	std::string toString() const;
 	static EvalWeights fromString(std::string str);
 	static EvalWeights getRandom();
+
+	EvalWeights mate(EvalWeights other) const;
 };
 
 
