@@ -127,7 +127,13 @@ void testBitBoardBasics() {
 
 void testWeights() {
 	BOOST_ASSERT(EvalWeights::getDefault().toString() ==
-	EvalWeights::fromString(EvalWeights::getDefault().toString()).toString());
+		EvalWeights::fromString(EvalWeights::getDefault().toString()).toString());
+
+	for (int i=0;i<10;++i) {
+		const auto randWeights = EvalWeights::getRandom();
+		BOOST_ASSERT(randWeights.toString() ==
+			EvalWeights::fromString(randWeights.toString()).toString());
+	}
 }
 
 int main()

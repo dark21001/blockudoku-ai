@@ -629,6 +629,13 @@ EvalWeights EvalWeights::fromString(std::string str) {
 	}
 	return result;
 }
+EvalWeights EvalWeights::getRandom() {
+	EvalWeights r;
+	for (int i=0;i<NUM_WEIGHTS;++i) {
+		r.weights[i] = rand() % 100 + 1;
+	}
+	return r;
+}
 
 
 

@@ -123,6 +123,7 @@ public:
 	static EvalWeights getDefault();
 	std::string toString() const;
 	static EvalWeights fromString(std::string str);
+	static EvalWeights getRandom();
 };
 
 
