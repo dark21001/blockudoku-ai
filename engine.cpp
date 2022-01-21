@@ -593,7 +593,7 @@ EvalWeights EvalWeights::getDefault() {
 	return r;
 }
 int EvalWeights::getOccupiedSquare() const {
-	return 10;
+	return 20;
 }
 int EvalWeights::getOccupiedCube() const {
 	return weights[0];
@@ -637,9 +637,10 @@ EvalWeights EvalWeights::getRandom() {
 	return r;
 }
 EvalWeights EvalWeights::getMutation() const {
+	int mutation_max = 9;
 	auto result = *this;
 	for (int i=0;i<NUM_WEIGHTS;++i) {
-		result.weights[i] = std::min(std::max(result.weights[i] + (rand() % 3) - 1, 0), 100);
+		result.weights[i] = std::min(std::max(result.weights[i] + (rand() % mutation_max) - mutation_max/2, 0), 100);
 	}
 	return result;
 }

@@ -128,6 +128,9 @@ public:
 	static EvalWeights getRandom();
 
 	EvalWeights mate(EvalWeights other) const;
+	inline bool operator<(EvalWeights other) const {
+		return false;
+	}
 };
 
 
