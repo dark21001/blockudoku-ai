@@ -649,7 +649,10 @@ EvalWeights EvalWeights::mate(EvalWeights other) const {
 	for (int i=0;i<NUM_WEIGHTS;++i) {
 		result.weights[i] = rand() % 2 ? (*this).weights[i] : other.weights[i];
 	}
-	return result.getMutation();
+	if (rand() % 10 == 0 ) {
+		result = result.getMutation();
+	}
+	return result;
 }
 
 
