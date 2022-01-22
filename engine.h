@@ -49,9 +49,6 @@ public:
 
 	BitBoard leastSignificantBit() const;
 
-	// For a board with exactly 1 bit on, fill the entire row and column.
-	BitBoard getCross() const;
-
 	// Swap row 0 with 8, 1 with 7, 2 with 6, 3 with 5.
 	BitBoard topDownFlip() const;
 

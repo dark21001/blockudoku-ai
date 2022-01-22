@@ -4,6 +4,21 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <random>
+#include <mutex>
+
+namespace {
+	
+	int intRand(const int& min, const int& max) {
+		static std::mutex mtx;
+		mtx.lock();
+		static std::mt19937 generator;
+		std::uniform_int_distribution<int> distribution(min, max);
+		const auto result = distribution(generator);
+		mtx.unlock();
+		return result;
+	}
+}
 
 namespace {
 	const uint64_t ROW_0 = 0x1FFULL;
@@ -128,12 +143,6 @@ BitBoard BitBoard::leastSignificantBit() const {
 		return BitBoard(a &- a, 0);
 	}
 	return BitBoard(0, b &- b);
-}
-
-BitBoard BitBoard::getCross() const {
-	assert(count() == 1);
-	const int i = a ? __builtin_ctzll(a) : 54 + __builtin_ctzll(b);
-	return BitBoard::row(i / 9) | BitBoard::column(i % 9);
 }
 
 int BitBoard::count() const {
@@ -277,7 +286,7 @@ namespace {
 }
 
 Piece Piece::getRandom() {
-	return Piece(PIECES[rand() % 47]);
+	return Piece(PIECES[intRand(0, 46)]);
 }
 
 bool Piece::operator<(Piece other) const {
@@ -632,24 +641,24 @@ EvalWeights EvalWeights::fromString(std::string str) {
 EvalWeights EvalWeights::getRandom() {
 	EvalWeights r;
 	for (int i=0;i<NUM_WEIGHTS;++i) {
-		r.weights[i] = rand() % 100 + 1;
+		r.weights[i] = intRand(1, 100);
 	}
 	return r;
 }
 EvalWeights EvalWeights::getMutation() const {
-	int mutation_max = 9;
+	int mutation_max = 5;
 	auto result = *this;
 	for (int i=0;i<NUM_WEIGHTS;++i) {
-		result.weights[i] = std::min(std::max(result.weights[i] + (rand() % mutation_max) - mutation_max/2, 0), 100);
+		result.weights[i] = std::min(std::max(result.weights[i] + intRand(-mutation_max, mutation_max), 0), 100);
 	}
 	return result;
 }
 EvalWeights EvalWeights::mate(EvalWeights other) const {
 	EvalWeights result;
 	for (int i=0;i<NUM_WEIGHTS;++i) {
-		result.weights[i] = rand() % 2 ? (*this).weights[i] : other.weights[i];
+		result.weights[i] = intRand(0, 1) ? (*this).weights[i] : other.weights[i];
 	}
-	if (rand() % 10 == 0 ) {
+	if (intRand(0, 9) == 0) {
 		result = result.getMutation();
 	}
 	return result;
