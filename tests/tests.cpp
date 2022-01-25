@@ -110,19 +110,6 @@ void testBitBoardBasics() {
 	const auto bottom_right_cube = BitBoard::cube(2, 2);
 	BOOST_ASSERT(bottom_right_cube.shiftUp().shiftDown() == bottom_right_cube);
 	BOOST_ASSERT(bottom_right_cube.shiftLeft().shiftRight() == bottom_right_cube);
-
-	{
-		auto b = BitBoard::full();
-		auto acc = BitBoard::empty();
-		while (b) {
-			auto lsb = b.leastSignificantBit();
-			BOOST_ASSERT(lsb.count() == 1);
-			acc = acc | lsb;
-			b = b - lsb;
-			BOOST_ASSERT(lsb.getCross().count() == 17);
-		}
-		BOOST_ASSERT(acc == BitBoard::full());
-	}
 }
 
 void testWeights() {

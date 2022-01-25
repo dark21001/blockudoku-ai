@@ -31,12 +31,15 @@ double simpleEvalFitnessTest(EvalWeights weights, int numGames) {
 	std::atomic<int> games_done(0);
 	std::vector<double> scores;
 	std::vector<std::thread> workers;
+	std::mutex mtx;
     for (int i = 0; i < std::thread::hardware_concurrency(); i++) {
         workers.push_back(std::thread([&]()
         {
 			while (games_done++ < numGames){
 				const auto score = getNumTurnsSample(weights);
+				mtx.lock();
 				scores.push_back(score);
+				mtx.unlock();
 				std::cout << scores.size() << '/' << numGames << ' ' << score << std::endl;
 			}
         }));
@@ -56,11 +59,16 @@ double simpleEvalFitnessTest(EvalWeights weights, int numGames) {
 }
 
 std::vector<EvalWeights> getInitialPopulation(int n) {
-	auto parent_a = EvalWeights::fromString("38 24 43 59 76 23");
-	auto parent_b = EvalWeights::fromString("29 32 40 56 72 13");
+	/*
+
+[45 32 40 56 72 13 ] 29740
+[29 32 40 56 72 13 ] 29089
+
+	*/
+	auto parent_a = EvalWeights::fromString("29 32 40 56 72 13");
 	std::vector<EvalWeights> results;
 	for (int i=0;i<n;++i) {
-		results.push_back(parent_a.mate(parent_b));
+		results.push_back(parent_a.getMutation());
 	}
 
 	return results;
@@ -74,7 +82,7 @@ void learn(int population_size) {
 		std::vector<std::pair<int, EvalWeights>> scores;
 		for (auto w : pop) {
 			std::cout << "[" << w.toString() << "]" << std::endl;
-			scores.push_back(std::make_pair(simpleEvalFitnessTest(w, 100), w));
+			scores.push_back(std::make_pair(simpleEvalFitnessTest(w, 500), w));
 		}
 		std::cout << std::endl;
 		std::sort(scores.begin(), scores.end());
