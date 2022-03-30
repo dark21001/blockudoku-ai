@@ -8,11 +8,11 @@
 #include <mutex>
 
 namespace {
-
+	
 	int intRand(const int& min, const int& max) {
 		static std::mutex mtx;
 		mtx.lock();
-		static std::mt19937 generator((unsigned)time(NULL));
+		static std::mt19937 generator;
 		std::uniform_int_distribution<int> distribution(min, max);
 		const auto result = distribution(generator);
 		mtx.unlock();
@@ -581,15 +581,24 @@ NextGameStateIterator NextGameStateIteratorGenerator::end() const {
 }
 
 // ===== Eval Weights
+/*
+	const int OCCUPIED_SQUARE = 10; // FIXED DO NOT CHANGE
+	const int CUBE = 30;
+	const int SQUASHED_EMPTY = 10;
+	const int CORNERED_EMPTY = 10;
+	const int ALTERNATING = 15;
+	const int DEADLY_PIECE = 40;
+	const auto THREE_BAR = 5;
+*/
 EvalWeights::EvalWeights() {}
 EvalWeights EvalWeights::getDefault() {
 	EvalWeights r;
-	r.weights[0] = 45; // CUBE;
-	r.weights[1] = 32; // SQUASHED_EMPTY;
-	r.weights[2] = 40; // CORNERED_EMPTY;
-	r.weights[3] = 56; // ALTERNATING;
-	r.weights[4] = 72; // DEADLY_PIECE;
-	r.weights[5] = 13; // THREE_BAR.
+	r.weights[0] = 30; // CUBE;
+	r.weights[1] = 10; // SQUASHED_EMPTY;
+	r.weights[2] = 10; // CORNERED_EMPTY;
+	r.weights[3] = 15; // ALTERNATING;
+	r.weights[4] = 40; // DEADLY_PIECE;
+	r.weights[5] = 5; // THREE_BAR.
 	return r;
 }
 int EvalWeights::getOccupiedSquare() const {
@@ -637,12 +646,10 @@ EvalWeights EvalWeights::getRandom() {
 	return r;
 }
 EvalWeights EvalWeights::getMutation() const {
-	int mutation_max = 20;
+	int mutation_max = 5;
 	auto result = *this;
 	for (int i=0;i<NUM_WEIGHTS;++i) {
-		if (intRand(0, 5) == 0) {
-			result.weights[i] = std::min(std::max(result.weights[i] + intRand(-mutation_max, mutation_max), 0), 100);
-		}
+		result.weights[i] = std::min(std::max(result.weights[i] + intRand(-mutation_max, mutation_max), 0), 100);
 	}
 	return result;
 }
@@ -651,7 +658,9 @@ EvalWeights EvalWeights::mate(EvalWeights other) const {
 	for (int i=0;i<NUM_WEIGHTS;++i) {
 		result.weights[i] = intRand(0, 1) ? (*this).weights[i] : other.weights[i];
 	}
-	result = result.getMutation();
+	if (intRand(0, 9) == 0) {
+		result = result.getMutation();
+	}
 	return result;
 }
 

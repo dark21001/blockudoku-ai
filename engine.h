@@ -108,6 +108,7 @@ private:
 	EvalWeights();
 
 	int weights[NUM_WEIGHTS] = {0};
+	EvalWeights getMutation() const;
 public:
 	int getOccupiedSquare() const;
 	int getOccupiedCube() const;
@@ -117,12 +118,12 @@ public:
 	int getDeadlyPiece() const;
 	int get3Bar() const;
 
+
 	static EvalWeights getDefault();
 	std::string toString() const;
 	static EvalWeights fromString(std::string str);
 	static EvalWeights getRandom();
 
-	EvalWeights getMutation() const;
 	EvalWeights mate(EvalWeights other) const;
 	inline bool operator<(EvalWeights other) const {
 		return false;
@@ -177,6 +178,7 @@ public:
 
 	// Similar to makeMoveSimple, but considers possible placements of the 4th piece.
 	static GameState makeMoveLookahead(EvalWeights weights, GameState state, PieceSet piece_set);
+
 private:
 	static bool canClearWith2PiecesOrFewer(GameState state, PieceSet piece_set);
 
